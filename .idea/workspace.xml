@@ -48,8 +48,8 @@
       <file leaf-file-name="TheanoCNN.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/TheanoCNN.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.21412301">
-              <caret line="160" column="51" selection-start-line="160" selection-start-column="51" selection-end-line="160" selection-end-column="51" />
+            <state vertical-scroll-proportion="0.65831435">
+              <caret line="204" column="0" selection-start-line="204" selection-start-column="0" selection-end-line="205" selection-end-column="0" />
               <folding>
                 <element signature="e#587#3360#0" expanded="false" />
                 <element signature="e#587#1395#1" expanded="false" />
@@ -71,8 +71,8 @@
         <option value="$PROJECT_DIR$/boosted_trees.py" />
         <option value="$PROJECT_DIR$/TheanoExtras.py" />
         <option value="$PROJECT_DIR$/theano_cnn_call.py" />
-        <option value="$PROJECT_DIR$/TheanoCNN.py" />
         <option value="$PROJECT_DIR$/AstroImageMunger.py" />
+        <option value="$PROJECT_DIR$/TheanoCNN.py" />
       </list>
     </option>
   </component>
@@ -405,7 +405,7 @@
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.25" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3604651" sideWeight="0.8774834" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.39098838" sideWeight="0.8716887" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32122093" sideWeight="0.84933776" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32122093" sideWeight="0.84933776" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.36151603" sideWeight="0.12251656" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -856,8 +856,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/TheanoCNN.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.21412301">
-          <caret line="160" column="51" selection-start-line="160" selection-start-column="51" selection-end-line="160" selection-end-column="51" />
+        <state vertical-scroll-proportion="0.65831435">
+          <caret line="204" column="0" selection-start-line="204" selection-start-column="0" selection-end-line="205" selection-end-column="0" />
           <folding>
             <element signature="e#587#3360#0" expanded="false" />
             <element signature="e#587#1395#1" expanded="false" />

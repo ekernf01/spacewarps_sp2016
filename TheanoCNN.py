@@ -144,10 +144,12 @@ class LeNet():
         print('... building the model')
 
         # Form input of shape (batch_size, 1, image_size[0], image_size[1])
-        train_set_x, train_set_y = get_batch(batch_size = batch_size, CV_type="train")
-        test_set_x,  test_set_y  = get_batch(batch_size = batch_size, CV_type="test")
-        n_train_batches = 1
-        n_test_batches = 1
+        n_train_batches = 20
+        n_test_examples = 100
+        train_set_x, train_set_y = get_batch(batch_size = batch_size * n_train_batches, CV_type="train")
+        test_set_x,  test_set_y  = get_batch(batch_size = n_test_examples,  CV_type="test")
+        print(train_set_x.shape)
+        print(test_set_x.shape)
 
         print("...gathered input. Laying layers.")
 
@@ -185,7 +187,7 @@ class LeNet():
         test_model = theano.function(
             inputs=[],
             outputs=layer3.errors(y),
-            givens={x: test_set_x,y: test_set_y}
+            givens={x: test_set_x, y: test_set_y}
         )
 
         # create a list of all model parameters to be fit by gradient descent
@@ -205,10 +207,10 @@ class LeNet():
         ]
 
         train_model = theano.function(
-            [],
-            cost,
+            inputs=[],
+            outputs=cost,
             updates=updates,
-            givens={x: train_set_x, y: train_set_y}
+            givens={x:train_set_x, y:train_set_y}
         )
         # end-snippet-1
 
@@ -218,12 +220,12 @@ class LeNet():
         print('... training')
 
         start_time = timeit.default_timer()
-        _           = [train_model() for i in range(n_train_batches)]
-        test_losses = [test_model()  for i in range(n_test_batches )]
-        test_score = np.mean(test_losses)
+        for i in range(n_train_batches):
+            _ = train_model()
+        test_loss = test_model()
 
         end_time = timeit.default_timer()
-        print('Optimization complete.')
+        print('Optimization complete. Test loss is: ', test_loss)
         print(('The code for file ' +
                os.path.split(__file__)[1] +
                ' ran for %.2fm' % ((end_time - start_time) / 60.)), file=sys.stderr)
