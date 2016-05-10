@@ -8,7 +8,10 @@ import pandas as pd
 import numpy as np
 import warnings
 
-
+PATH_TO_DATA = "../data"
+PATH_TO_SEXTRACTOR = "/usr/local/Cellar/sextractor/2.19.5/bin/sex"
+IMAGE_SHAPE = (96, 96, 3)
+    
 class AstroImageMunger:
     """
     This class has various utilities to help manipulate telescope image data.
@@ -36,45 +39,80 @@ class AstroImageMunger:
           ...                  <-- it converts each PNG to three FITS images, one for each color.
           11511_ASW0000o2y.fits
         features
-          0_ASW0001f17.txt
-          ...                  <-- it extracts features from each FITS and saves them here.
-          11511_ASW0000o2y.txt
+          0_ASW0001f17.pkl
+          ...                  <-- it extracts features from each FITS and saves them here as pickled pandas dataframes.
+          11511_ASW0000o2y.pkl
     """
 
-    PATH_TO_DATA = "../data"
-    PATH_TO_SEXTRACTOR = "/usr/local/Cellar/sextractor/2.19.5/bin/sex"
-    IMAGE_SHAPE = (96, 96, 3)
-    def __init__(self, path_to_data = PATH_TO_DATA, path_to_sextractor = PATH_TO_SEXTRACTOR, test_mode = False):
+
+    def __init__(self, path_to_data = PATH_TO_DATA, path_to_sextractor = PATH_TO_SEXTRACTOR,
+                 image_shape = IMAGE_SHAPE, test_mode = False):
         self.counter = 0
         self.path_to_data = path_to_data
         self.path_to_sextractor = path_to_sextractor
         self.catalog = pd.read_csv(os.path.join(path_to_data, 'catalog/catalog.csv'), index_col=0)
         self.num_images = self.catalog.shape[0]
         self.test_mode = test_mode
+        self.num_examples_available = self.num_images
+        self.image_shape = image_shape
+        self.test_set_idcs = np.random.choice(range(self.num_images), size = round(self.num_images / 10), replace = False)
         return
 
-    
+
     def displayFits(self, image_path, title):
+        """
+        Whenever I needed a sanity check.
+        """
         image_data = fits.open(image_path)[0].data
         plt.imshow(image_data)
         plt.title(title)
         plt.show()
         return
+
+
+    def imgToRgbArray(self, img):
+        """
+        :param img: PILLOW image object
+        :return: 3d np array, 96x96x3
+        """
+        return np.asarray(img).astype(np.int32)
     
+    
+    def make_feature_path(self, i, ZooID):
+        """
+        The features from SExtractor get saved here.
+        :param i:
+        :param ZooID:
+        :return:
+        """
+        return os.path.join(self.path_to_data, "cutouts", "features", str(i) + "_" + ZooID + ".pkl")
 
-    def imgToRgbArrays(self, img):
-        pixvals_np = np.asarray(img).astype(np.int32)
-        return [pixvals_np[:,:, i] for i in range(3)]
 
-
-    def makename(self, i, ZooID, is_fits, c = None):
+    def make_img_name(self, i, ZooID, is_fits, c = None):
+        """
+        This puts together the name of an image from this dataset. The FITS files have and extra suffix
+        "color_<c>.pkl" for <c> in {0, 1, 2}.
+        :param i:
+        :param ZooID:
+        :param is_fits:
+        :param c:
+        :return:
+        """
         if is_fits:
             extension = ".fits"
         else:
             extension = ".png"
         return str(i) + "_" + ZooID + "_color" + str(c) + extension
 
-    def makepath(self, i, ZooID, is_fits, c = None):
+    def make_img_path(self, i, ZooID, is_fits, c = None):
+        """
+        Similar to make_img_name, but this returns a full path.
+        :param i:
+        :param ZooID:
+        :param is_fits:
+        :param c:
+        :return:
+        """
         core = str(i) + "_" + ZooID
         if is_fits:
             if c is None:
@@ -86,6 +124,11 @@ class AstroImageMunger:
 
 
     def pngsToFits(self, overwrite = False):
+        """
+        Converts each PNG file to three FITS files, once per color.
+        :param overwrite:
+        :return:
+        """
         for i, ZooID in enumerate(self.catalog['ZooID']):
             if self.test_mode and i > 5:
                 break
@@ -96,7 +139,7 @@ class AstroImageMunger:
             img = Image.open(png_path)
             img_by_color = self.imgToRgbArrays(img)
             for c in range(3):
-                fits_path = self.makepath(i, ZooID, True, c)
+                fits_path = self.make_img_path(i, ZooID, True, c)
                 #open, convert, save
                 if os.path.exists(fits_path):
                     if overwrite:
@@ -137,70 +180,124 @@ class AstroImageMunger:
             relevant_lines.append(numbers)
         return relevant_lines
 
-    def saveFeatures(self):
+    def saveFeatures(self, pick_up_where_left_off = True):
         """
         Calls S Extractor and saves the features to files.
+        If pick_up_where_left_off, it will look for the first image that
+         doesn't have extracted features and start with that.
         :return:
         """
         for i, ZooID in enumerate(self.catalog['ZooID']):
-            if i % 500 == 1:
-                print "Progress in feature extraction:"
-                print features.tail()
+            if pick_up_where_left_off and os.path.exists(self.make_feature_path(i, ZooID)):
+                continue
             for c in range(3):
-                sex_image_name = self.makename(i, ZooID, True, c)
-                py_image_path  = self.makepath(i, ZooID, True, c)
+                sex_image_name = self.make_img_name(i, ZooID, True, c)
                 is_dud = "dud" != self.catalog['object_flavor'][i]
                 metadata = [is_dud, i, ZooID, c]
+                # call sextractor
                 try:
                     raw_features = subprocess.check_output([self.path_to_sextractor, sex_image_name],
                                                            cwd=os.path.join(self.path_to_data, "cutouts/fits"))
                 except subprocess.CalledProcessError, e:
                     print "SExtractor stdout output:\n", e.output
-
-                if (i==0 and c==0):
+                #make a dataframe for features and put features in it
+                if c==0:
                     sex_cols = self.extract_header(raw_features)
-                    features = pd.DataFrame(columns = ["is_dud", "image_number", "ZooID", "color"] + sex_cols)
-
+                    feature = pd.DataFrame(columns = ["is_dud", "image_number", "ZooID", "color"] + sex_cols)
                 for vector in self.parse_raw_features(raw_features):
-                    features.loc[len(features), :] = metadata + vector
-
-                #if self.test_mode:
-                #    self.displayFits(py_image_path, title=sex_image_name)
+                    feature.loc[len(feature), :] = metadata + vector
             if self.test_mode and i >= 5:
                 break
-        with open(os.path.join(self.path_to_data + "/catalog/features.pkl"), "wb") as f:
-            pkl.dump(features, f)
+            #save one image's worth
+            with open(self.make_feature_path(i, ZooID), "wb") as f:
+                pkl.dump(feature, f)
         return
 
 
-    def loadFeatures(self):
-        with open(os.path.join(self.path_to_data + "/catalog/features.pkl")) as f:
-            features = pkl.load(f, "rb")
-        return features
-
-
-    def nextImage(self, binary_label = True, cycle = True):
-        """
-        # This is the intended interface to TensorFlow.
-        # Returns a tuple containing a 3d array of pixel values (first element)
-        # and a label (second element). Label is binary (zero for "dud", 1 otherwise)
-        # unless you set binary_label to False, in which case it gives a string, e.g.
-        # "simulated lensing cluster" or "dud".
-        #
-        # When cycle == True, which is the default, it will return
-        # to the beginning instead of running out of images. This is so
-        # an SGD routine can make another pass.
-        """
-        if cycle       and self.counter >= self.num_images:
+    def increment_counter(self, cycle):
+        self.counter += 1
+        #This block handles running out and/or cycling back
+        outta_stuff = self.counter >= self.num_examples_available
+        if cycle       and outta_stuff:
+            warnings.warn("Returning to beginning of dataset.")
             self.counter = 0
-        if (not cycle) and self.counter >= self.num_images:
+        if (not cycle) and outta_stuff:
             raise Exception("Ran out of images in nextImage.")
+        return
+
+    def nextExample(self, datum_type, binary_label = True, cycle = True, CV_type = "any"):
+        """
+         This is the intended interface from this class to machine learning algorithms.
+         It alters the state of self.counter, so that it works like a generator,
+         returning a new image every time. When cycle == True, which is the default, it
+         will return to the beginning instead of running out of images. This is so that
+         an SGD routine can make another pass.
+
+         Returns a tuple containing a datum (first element)
+         and a label (second element). Label is binary (zero for "dud", 1 otherwise)
+         unless you set binary_label to False, in which case it gives a string, e.g.
+         "simulated lensing cluster" or "dud".
+
+         If datum_type == "image", then the datum is
+         a 3d array of pixel values (built to be a tensorflow interface).
+         If datum_type == "sextractor", then it gives a pd dataframe of features from
+         S Extractor. Check the column names for details.
+
+         The constructor builds in a random split of the data to 1/10 test, 9/10 training.
+         If CV_type == "any" (default), then this function does what's outlined above.
+         If CV_type == "test" (default), then it skips to the next test example.
+         If CV_type == "train" (default), then it skips to the next train example.
+        """
+
+        #This block moves to the next image, skipping to test/trainset if necessary
+        self.increment_counter(cycle)
+        if CV_type == "any":
+            pass
+        elif CV_type == "test":
+            while not self.counter in self.test_set_idcs:
+                self.increment_counter(cycle)
+        elif CV_type == "train":
+            while self.counter in self.test_set_idcs:
+                self.increment_counter(cycle)
+        else:
+            raise Exception("CV_type must be one of 'any', 'train', or 'test'.")
+
+        #This block fills in the right type of label
         if binary_label:
             label = "dud" != self.catalog['object_flavor'][self.counter]
         else:
             label = self.catalog['object_flavor'][self.counter]
         ZooID = self.catalog['ZooID'][self.counter]
-        png_path = os.path.join(self.path_to_data, "cutouts/png", str(self.counter) + '_' + ZooID + ".png")
-        pixels = self.imgToArray(Image.open(png_path))
-        self.counter += 1
-        return pixels, label
+
+        #This block fills in the right type of feature
+        if datum_type == "image":
+            png_path = os.path.join(self.path_to_data, "cutouts/png", str(self.counter) + '_' + ZooID + ".png")
+            datum = self.imgToRgbArray(Image.open(png_path))
+        elif datum_type == "sextractor":
+            with open(self.make_feature_path(self.counter, ZooID), "rb") as f:
+                datum = pkl.load(f)
+        else:
+            raise Exception("type should be one of (image, sextractor)")
+
+        return datum, label
+
+
+
+    def get_batch(self, batch_size, CV_type, datum_type):
+        """
+        Return a tuple of numpy arrays images, labels.
+        images is the images, RBG. labels is the labels, boolean. Nevertheless, Theano may read them as floats.
+        images.shape is (batch_size, 3, 96, 96) while labels.shape is batch_size.
+
+        :param batch_size:
+        :param CV_type: see nextExample documentation.
+        :return:
+        """
+
+        images = np.zeros((batch_size, self.image_shape[2], self.image_shape[0], self.image_shape[1]))
+        labels = np.zeros(batch_size)
+        for im_idx in range(batch_size):
+            (img, lbl) = self.nextExample(datum_type=datum_type, CV_type=CV_type)
+            images[im_idx,...] = img.transpose((2, 0, 1))
+            labels[im_idx] = lbl
+        return images, labels

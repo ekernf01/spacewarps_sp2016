@@ -8,6 +8,5 @@ swmunge = AstroImageMunger(test_mode = False) #switch this out of test mode even
 swmunge.pngsToFits()
 
 # Extract and save features
-swmunge.saveFeatures()
-swmunge.loadFeatures()
+print swmunge.saveFeatures()
 
