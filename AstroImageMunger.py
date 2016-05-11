@@ -55,7 +55,7 @@ class AstroImageMunger:
         self.test_mode = test_mode
         self.num_examples_available = self.num_images
         self.image_shape = image_shape
-        self.test_set_idcs = np.random.choice(range(self.num_images), size = int(round(self.num_images / 10)), replace = False)
+        self.test_set_idcs = np.random.choice(range(self.num_images), size = round(self.num_images / 10), replace = False)
         return
 
 
@@ -295,9 +295,9 @@ class AstroImageMunger:
         """
 
         images = np.zeros((batch_size, self.image_shape[2], self.image_shape[0], self.image_shape[1]))
-        labels = np.zeros(batch_size, dtype = 'int32')
+        labels = np.zeros(batch_size, dtype = "int32")
         for im_idx in range(batch_size):
             (img, lbl) = self.nextExample(datum_type=datum_type, CV_type=CV_type)
             images[im_idx,...] = img.transpose((2, 0, 1))
-            labels[im_idx] = int(lbl)
+            labels[im_idx] = lbl
         return images, labels

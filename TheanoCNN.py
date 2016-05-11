@@ -22,7 +22,7 @@ from TheanoExtras import LogisticRegression, HiddenLayer
 class LeNetConvPoolLayer(object):
     """Pool Layer of a convolutional network """
 
-    def __init__(self, rng, input, filter_shape, image_shape, poolsize):
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2)):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
 
@@ -97,7 +97,7 @@ class LeNetConvPoolLayer(object):
         self.input = input
 
 class LeNet():
-    def __init__(self, filter_diam=9, maxpool_size=2):
+    def __init__(self, filter_diam = 9, maxpool_size = 2):
         self.filter_diam = filter_diam
         self.maxpool_size = maxpool_size
         return
@@ -111,7 +111,7 @@ class LeNet():
                 input=layer0_input,
                 image_shape=(batch_size, nkern_prev, image_size[0], image_size[1]),
                 filter_shape=(nkern, nkern_prev, self.filter_diam, self.filter_diam),
-                poolsize=(self.maxpool_size, self.maxpool_size)
+                poolsize=(2, 2)
                 )
         for i in range(2):
             image_size[i] = self.update_image_size(image_size[i])
@@ -119,7 +119,7 @@ class LeNet():
         return layer0, image_size
 
     def eval_lenet5(self, get_batch, image_size,
-                    learning_rate=0.1, n_epochs=200,
+                    learning_rate=0.1, n_batches=20,
                     nkerns=[20, 50], batch_size=500):
         """
         :type learning_rate: float
@@ -144,19 +144,13 @@ class LeNet():
         print('... building the model')
 
         # Form input of shape (batch_size, 1, image_size[0], image_size[1])
-        n_train_batches = 20
-        n_test_examples = 100
-        train_set_x, train_set_y = get_batch(batch_size = batch_size * n_train_batches, CV_type="train")
-        test_set_x,  test_set_y  = get_batch(batch_size = n_test_examples,  CV_type="test")
-        print(train_set_x.shape)
-        print(test_set_x.shape)
 
-        print("...gathered input. Laying layers.")
+        test_set_x,  test_set_y  = get_batch(batch_size = batch_size, CV_type="test")
 
         #Feed it to Theano
-        x = T.dtensor4()
-        y = T.ivector()
-        index = T.lscalar()
+        x = T.dtensor4("x")
+        y = T.ivector("y")
+        index = T.lscalar()  # index to a [mini]batch
 
         #set up two convolutional pooling layers
         layer0, image_size = self.do_conv_pool(x,             image_size, batch_size, nkern = nkerns[0], nkern_prev = image_size[2])
@@ -185,9 +179,9 @@ class LeNet():
 
         # create a function to compute the mistakes that are made by the model
         test_model = theano.function(
-            inputs=[],
-            outputs=layer3.errors(y),
-            givens={x: test_set_x, y: test_set_y}
+            inputs = [],
+            outputs = layer3.errors(y),
+            givens = {x: test_set_x, y: test_set_y}
         )
 
         # create a list of all model parameters to be fit by gradient descent
@@ -205,12 +199,14 @@ class LeNet():
             (param_i, param_i - learning_rate * grad_i)
             for param_i, grad_i in zip(params, grads)
         ]
-
+        train_set_x, train_set_y = get_batch(batch_size = batch_size, CV_type="train")
+        train_set_x_T = theano.shared(train_set_x)
+        train_set_y_T = theano.shared(train_set_y)
         train_model = theano.function(
-            inputs=[],
-            outputs=cost,
+            [],
+            cost,
             updates=updates,
-            givens={x:train_set_x, y:train_set_y}
+            givens={x:train_set_x_T, y:train_set_y_T}
         )
         # end-snippet-1
 
@@ -220,8 +216,11 @@ class LeNet():
         print('... training')
 
         start_time = timeit.default_timer()
-        for i in range(n_train_batches):
-            _ = train_model()
+        for i in range(n_batches):
+            train_set_x, train_set_y = get_batch(batch_size = batch_size, CV_type="train")
+            train_set_x_T.set_value(train_set_x)
+            train_set_y_T.set_value(train_set_y)
+            train_model()
         test_loss = test_model()
 
         end_time = timeit.default_timer()
@@ -229,3 +228,5 @@ class LeNet():
         print(('The code for file ' +
                os.path.split(__file__)[1] +
                ' ran for %.2fm' % ((end_time - start_time) / 60.)), file=sys.stderr)
+
+        return(test_loss)
