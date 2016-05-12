@@ -55,6 +55,7 @@ class AstroImageMunger:
         self.test_mode = test_mode
         self.num_examples_available = self.num_images
         self.image_shape = image_shape
+        self.center_pixel = [(self.image_shape[i] + 1.0) / 2 for i in (0, 1)]
         self.test_set_idcs = np.random.choice(range(self.num_images), size = round(self.num_images / 10), replace = False)
         return
 
@@ -137,7 +138,7 @@ class AstroImageMunger:
             basic_name =  str(i) + '_' + ZooID
             png_path = os.path.join(self.path_to_data, "cutouts/png", basic_name + ".png")
             img = Image.open(png_path)
-            img_by_color = self.imgToRgbArrays(img)
+            img_by_color = [self.imgToRgbArray(img)[:,:,c] for c in range(3)]
             for c in range(3):
                 fits_path = self.make_img_path(i, ZooID, True, c)
                 #open, convert, save
@@ -210,7 +211,7 @@ class AstroImageMunger:
                 break
             #save one image's worth
             with open(self.make_feature_path(i, ZooID), "wb") as f:
-                pkl.dump(feature, f)
+                pkl.dump(self.get_closest_to_center(feature), f)
         return
 
 
@@ -240,8 +241,8 @@ class AstroImageMunger:
 
          If datum_type == "image", then the datum is
          a 3d array of pixel values (built to be a tensorflow interface).
-         If datum_type == "sextractor", then it gives a pd dataframe of features from
-         S Extractor. Check the column names for details.
+         If datum_type == "sextractor", then it gives a pd Series of features from
+         S Extractor.
 
          The constructor builds in a random split of the data to 1/10 test, 9/10 training.
          If CV_type == "any" (default), then this function does what's outlined above.
@@ -276,6 +277,9 @@ class AstroImageMunger:
         elif datum_type == "sextractor":
             with open(self.make_feature_path(self.counter, ZooID), "rb") as f:
                 datum = pkl.load(f)
+                # THE FIRST FEW COLUMNS ARE METADATA, NOT FEATURES, and they include the true labels.
+                # Hopefully I'll fix this soon.
+                datum = datum[3:]
         else:
             raise Exception("type should be one of (image, sextractor)")
 
@@ -283,7 +287,7 @@ class AstroImageMunger:
 
 
 
-    def get_batch(self, batch_size, CV_type, datum_type):
+    def get_batch(self, batch_size, CV_type):
         """
         Return a tuple of numpy arrays images, labels.
         images is the images, RBG. labels is the labels, boolean. Nevertheless, Theano may read them as floats.
@@ -297,7 +301,23 @@ class AstroImageMunger:
         images = np.zeros((batch_size, self.image_shape[2], self.image_shape[0], self.image_shape[1]))
         labels = np.zeros(batch_size, dtype = "int32")
         for im_idx in range(batch_size):
-            (img, lbl) = self.nextExample(datum_type=datum_type, CV_type=CV_type)
+            (img, lbl) = self.nextExample(datum_type="image", CV_type=CV_type)
             images[im_idx,...] = img.transpose((2, 0, 1))
             labels[im_idx] = lbl
         return images, labels
+
+    def get_closest_to_center(self, objects):
+        """
+        Takes a PD dataframe of SExtractor extracted features and returns
+        the features from the object closest to the center of the image.
+        :return:
+        """
+        best_sq_dist = float("inf")
+        best_idx = 0
+        for idx in range(len(objects)):
+            obj_center = (objects.XPEAK_IMAGE[idx], objects.YPEAK_IMAGE[idx])
+            dist = np.sum([(self.center_pixel[i] - obj_center[i])**2 for i in (0, 1)])
+            if dist < best_sq_dist:
+                best_sq_dist = dist
+                best_idx = idx
+        return objects.iloc[best_idx,:]
