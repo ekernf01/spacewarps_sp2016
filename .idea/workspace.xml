@@ -1,20 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="85508a25-5d9a-4f18-bac8-5cf0a4b6b183" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/deprecated/boosted_trees.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/experiment_script.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/boosted_trees.py" afterPath="$PROJECT_DIR$/deprecated/boosted_trees.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/cnn first attempts junk/LeNetConvPoolLayer.py" afterPath="$PROJECT_DIR$/deprecated/cnn first attempts junk/LeNetConvPoolLayer.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/cnn first attempts junk/TheanoDeepLearn.py" afterPath="$PROJECT_DIR$/deprecated/cnn first attempts junk/TheanoDeepLearn.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/cnn first attempts junk/TheanoMNIST.py" afterPath="$PROJECT_DIR$/deprecated/cnn first attempts junk/TheanoMNIST.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/cnn first attempts junk/tensorflow_cnn.py" afterPath="$PROJECT_DIR$/deprecated/cnn first attempts junk/tensorflow_cnn.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/cnn first attempts junk/theano_cnn_sandbox.py" afterPath="$PROJECT_DIR$/deprecated/cnn first attempts junk/theano_cnn_sandbox.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/theano_cnn_call.py" afterPath="$PROJECT_DIR$/deprecated/theano_cnn_call.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TheanoCNN.py" afterPath="$PROJECT_DIR$/TheanoCNN.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TheanoExtras.py" afterPath="$PROJECT_DIR$/TheanoExtras.py" />
-    </list>
+    <list default="true" id="85508a25-5d9a-4f18-bac8-5cf0a4b6b183" name="Default" comment="" />
     <ignored path="code.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
