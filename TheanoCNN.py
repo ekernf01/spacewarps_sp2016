@@ -97,7 +97,7 @@ class LeNetConvPoolLayer(object):
         self.input = input
 
 class LeNet():
-    def __init__(self, image_size, get_batch, nkerns=[20, 50],
+    def __init__(self, image_size, get_training_batch, nkerns=[20, 50],
                  filter_diam = 9, maxpool_size = 2,
                  learning_rate=0.1, batch_size=500):
         """
@@ -108,9 +108,9 @@ class LeNet():
         :type n_batches: int
         :param n_batches: maximal number of batches to run the optimizer
 
-        :type get_batch: function
-        :param get_batch: function that returns tuples of the form (images, labels).
-        Its inputs are batch_size and CV_type. See the documentation of
+        :type get_training_batch: function
+        :param get_training_batch: function that returns tuples of the form (images, labels).
+        Its sole input is batch_size. See the documentation of
         AstroImageMunger.get_batch for more details.
 
         :type nkerns: list of ints
@@ -122,7 +122,7 @@ class LeNet():
         self.maxpool_size = maxpool_size
         self.rng = np.random.RandomState(23455)
         self.batch_size = batch_size
-        self.get_batch = get_batch
+        self.get_training_batch = get_training_batch
 
         print('... building the model')
         #=========  Set up Theano basics  =========
@@ -147,9 +147,9 @@ class LeNet():
         )
 
         # classify the values of the fully-connected sigmoidal layer
-        self.layer3 = LogisticRegression(input=self.layer2.output, n_in=500, n_out=10)
+        self.layer3 = LogisticRegression(input=self.layer2.output, n_in=500, n_out=2)
         # the cost we minimize during training is the NLL of the model
-        batch_template_xy = self.get_batch(batch_size = batch_size, CV_type="any")
+        batch_template_xy = self.get_training_batch(batch_size = batch_size)
 
         #=========  Set up Theano equipment specific to training =========
 
@@ -176,22 +176,13 @@ class LeNet():
             givens={self.x:self.train_set_x_T, self.y:self.train_set_y_T}
         )
 
-        #=========  Set up Theano equipment specific to testing =========
-        self.test_set_x_T = theano.shared(batch_template_xy[0])
-        self.test_set_y_T = theano.shared(batch_template_xy[1])
-        self.test_model = theano.function(
-            inputs = [],
-            outputs = self.layer3.errors(self.y),
-            givens = {self.x: self.test_set_x_T, self.y: self.test_set_y_T}
-        )
-
         return
 
-    def train(self, n_batches):
+    def fit(self, n_batches):
         start_time = timeit.default_timer()
         for i in range(n_batches):
             print("Training batch ", i, " of ", n_batches)
-            train_set_x, train_set_y = self.get_batch(batch_size = self.batch_size, CV_type="train")
+            train_set_x, train_set_y = self.get_training_batch(batch_size = self.batch_size)
             self.train_set_x_T.set_value(train_set_x)
             self.train_set_y_T.set_value(train_set_y)
             self.train_model()
@@ -201,15 +192,39 @@ class LeNet():
                ' ran for %.2fm' % ((end_time - start_time) / 60.)), file=sys.stderr)
         return
 
-    def test(self, n_test_batches):
-        test_losses = []
-        for i in range(n_test_batches):
-            test_set_x,  test_set_y  = self.get_batch(batch_size = self.batch_size, CV_type="test")
-            self.test_set_x_T.set_value(test_set_x)
-            self.test_set_y_T.set_value(test_set_y)
-            test_losses.append(self.test_model())
-        return np.mean(test_losses)
+    def predict_proba(self, X):
+        """
+        :param X: numpy array of RGB images with shape (num_test_examples, 3, 96, 96)
+        or rather (num_test_examples, image_size[2], image_size[0], image_size[1])
+        :return: numpy array of size num_test_examples containing probabilities.
+        """
+        n_examples= X.shape[0]
 
+        #pad x with zeros so the last batch is complete
+        pad_len = self.batch_size - (n_examples % self.batch_size)
+        pad_shape = list(X.shape)
+        pad_shape[0] = pad_len
+        X = np.concatenate([X, np.zeros(pad_shape)])
+
+        #set up Theano function
+        self.test_set_x_T = theano.shared(X[0:self.batch_size, :, :, :])
+        self.test_model = theano.function(
+            inputs=[],
+            outputs=self.layer3.p_y_given_x,
+            givens={self.x: self.test_set_x_T}
+        )
+
+        #run test in batches
+        p = []
+        num_test_batches = int(np.ceil(n_examples / self.batch_size))
+        for i in range(num_test_batches):
+            indices = (i * self.batch_size, (i + 1) *  self.batch_size)
+            self.test_set_x_T = theano.shared(X[indices[0]:indices[1], :, :, :])
+            p.extend(self.test_model())
+
+        #strip off the padding
+        p = np.array(p[0:n_examples])
+        return np.array(p)
 
     def update_image_size(self, original):
         return int(np.ceil((original - self.filter_diam + 1) / self.maxpool_size))
