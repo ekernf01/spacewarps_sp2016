@@ -2,6 +2,8 @@
 import theano
 import theano.tensor as T
 import numpy as np
+import warnings
+
 
 # start-snippet-1
 class HiddenLayer(object):
@@ -176,6 +178,8 @@ class LogisticRegression(object):
         # LP[n-1,y[n-1]]] and T.mean(LP[T.arange(y.shape[0]),y]) is
         # the mean (across minibatch examples) of the elements in v,
         # i.e., the mean log-likelihood across the minibatch.
+        # Using the mean rather than the sum is best because it keeps
+        # the gradient's scale from depending on the batch size.
         return -T.mean(T.log(self.p_y_given_x)[T.arange(y.shape[0]), y])
         # end-snippet-2
 

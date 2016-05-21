@@ -38,9 +38,17 @@ class AstroImageMunger:
           0_ASW0001f17_color2.fits
           ...                  <-- it converts each PNG to three FITS images, one for each color.
           11511_ASW0000o2y.fits
-        features
+        features|all_obj
           0_ASW0001f17.pkl
           ...                  <-- it extracts features from each FITS and saves them here as pickled pandas dataframes.
+          11511_ASW0000o2y.pkl
+        features|1obj
+          0_ASW0001f17.pkl
+          ...                  <-- features for the center-most object
+          11511_ASW0000o2y.pkl
+        features|1obj
+          0_ASW0001f17.pkl
+          ...                  <-- features for the three brightest objects
           11511_ASW0000o2y.pkl
     """
 
@@ -48,6 +56,7 @@ class AstroImageMunger:
     def __init__(self, path_to_data = PATH_TO_DATA, path_to_sextractor = PATH_TO_SEXTRACTOR,
                  image_shape = IMAGE_SHAPE, test_mode = False):
         self.counter = 0
+        self.SEXTRACTOR_FT_OUT = 16
         self.path_to_data = path_to_data
         self.path_to_sextractor = path_to_sextractor
         self.catalog = pd.read_csv(os.path.join(path_to_data, 'catalog/catalog.csv'), index_col=0)
@@ -79,14 +88,15 @@ class AstroImageMunger:
         return np.asarray(img).astype(np.int32)
     
     
-    def make_feature_path(self, i, ZooID):
+    def make_feature_path(self, i, ZooID, num_obj):
         """
         The features from SExtractor get saved here.
-        :param i:
-        :param ZooID:
+        :param i: image index in catalog
+        :param ZooID: ZooID in catalog
         :return:
         """
-        return os.path.join(self.path_to_data, "cutouts", "features", str(i) + "_" + ZooID + ".pkl")
+        assert num_obj in ("all_obj", "1obj", "3obj")
+        return os.path.join(self.path_to_data, "cutouts", "features|" + num_obj, str(i) + "_" + ZooID + ".pkl")
 
 
     def make_img_name(self, i, ZooID, is_fits, c = None):
@@ -181,20 +191,24 @@ class AstroImageMunger:
             relevant_lines.append(numbers)
         return relevant_lines
 
-    def saveFeatures(self, pick_up_where_left_off = True):
+    def saveFeatures(self, pick_up_where_left_off = False):
         """
         Calls S Extractor and saves the features to files.
         If pick_up_where_left_off, it will look for the first image that
          doesn't have extracted features and start with that.
         :return:
         """
+        for num_obj in ("1obj", "3obj", "all_obj"):
+            dir = os.path.join(self.path_to_data, "cutouts", "features|" + num_obj)
+            if not os.path.exists(dir):
+                os.mkdir(dir)
         for i, ZooID in enumerate(self.catalog['ZooID']):
-            if pick_up_where_left_off and os.path.exists(self.make_feature_path(i, ZooID)):
+            files_there = [os.path.exists(self.make_feature_path(i, ZooID, num_obj)) for num_obj in ("all_obj", "1obj", "3obj")]
+            if pick_up_where_left_off and all(files_there):
                 continue
             for c in range(3):
                 sex_image_name = self.make_img_name(i, ZooID, True, c)
                 is_dud = "dud" != self.catalog['object_flavor'][i]
-                metadata = [is_dud, i, ZooID, c]
                 # call sextractor
                 try:
                     raw_features = subprocess.check_output([self.path_to_sextractor, sex_image_name],
@@ -204,14 +218,18 @@ class AstroImageMunger:
                 #make a dataframe for features and put features in it
                 if c==0:
                     sex_cols = self.extract_header(raw_features)
-                    feature = pd.DataFrame(columns = ["is_dud", "image_number", "ZooID", "color"] + sex_cols)
+                    assert self.SEXTRACTOR_FT_OUT == len(sex_cols)
+                    feature = pd.DataFrame(columns = sex_cols)
                 for vector in self.parse_raw_features(raw_features):
-                    feature.loc[len(feature), :] = metadata + vector
+                    feature.loc[len(feature), :] = vector
             if self.test_mode and i >= 5:
                 break
             #save one image's worth
-            with open(self.make_feature_path(i, ZooID), "wb") as f:
-                pkl.dump(self.get_closest_to_center(feature), f)
+            with open(self.make_feature_path(i, ZooID, "1obj"), "wb") as f:
+                pkl.dump(self.get_brightest(feature, "1obj"), f)
+            with open(self.make_feature_path(i, ZooID, "3obj"), "wb") as f2:
+                pkl.dump(self.get_brightest(feature, "3obj"), f2)
+
         return
 
 
@@ -271,18 +289,16 @@ class AstroImageMunger:
         ZooID = self.catalog['ZooID'][self.counter]
 
         #This block fills in the right type of feature
+        valid_types = ("image", "sextractor|all_obj", "sextractor|1obj", "sextractor|3obj")
+        assert datum_type in valid_types
         if datum_type == "image":
             png_path = os.path.join(self.path_to_data, "cutouts/png", str(self.counter) + '_' + ZooID + ".png")
             datum = self.imgToRgbArray(Image.open(png_path))
-        elif datum_type == "sextractor":
-            with open(self.make_feature_path(self.counter, ZooID), "rb") as f:
-                datum = pkl.load(f)
-                # THE FIRST FEW COLUMNS ARE METADATA, NOT FEATURES, and they include the true labels.
-                # Hopefully I'll fix this soon.
-                datum = datum[3:]
         else:
-            raise Exception("type should be one of (image, sextractor)")
-
+            assert datum_type[0:11] == "sextractor|"
+            num_obj = datum_type[11:]
+            with open(self.make_feature_path(self.counter, ZooID, num_obj), "rb") as f:
+                datum = pkl.load(f)
         return datum, label
 
 
@@ -306,18 +322,41 @@ class AstroImageMunger:
             labels[im_idx] = lbl
         return images, labels
 
-    def get_closest_to_center(self, objects):
+    def get_brightest(self, objects, num_obj):
         """
         Takes a PD dataframe of SExtractor extracted features and returns
-        the features from the object closest to the center of the image.
+        the features from the three brightest objects.
+        Performs some additional computation: instead of just returning the features listed in
+        the default.param file discussed in the readme about SExtractor files, I add in the
+        distance and delta x and delta y from the brightest object for the second and third objects.
         :return:
         """
-        best_sq_dist = float("inf")
-        best_idx = 0
-        for idx in range(len(objects)):
-            obj_center = (objects.XPEAK_IMAGE[idx], objects.YPEAK_IMAGE[idx])
-            dist = np.sum([(self.center_pixel[i] - obj_center[i])**2 for i in (0, 1)])
-            if dist < best_sq_dist:
-                best_sq_dist = dist
-                best_idx = idx
-        return objects.iloc[best_idx,:]
+        warnings.warn("Only using channel 1 (second channel) in SExtractor features")
+        objects_rband = objects.isin({"color":1})
+        if self.test_mode:
+            assert all([c == 1 for c in objects_rband.color])
+        objects_by_flux = objects_rband.sort_values("FLUX_ISO", ascending=False)
+
+        if num_obj == "1obj":
+            return(np.array(objects_by_flux.iloc[0,:]))
+
+        assert num_obj == "3obj"
+
+        while True: #wanted a do loop
+            n = objects_by_flux.shape[0]
+            if n >= 3:
+                break
+            objects_by_flux.loc[n, :] = np.zeros(self.SEXTRACTOR_FT_OUT)
+
+        brightest_three = objects_by_flux.iloc[0:3,:]
+        brightest_three.index = (0,1,2)
+        if self.test_mode:
+            assert all([brightest_three.loc[0, "FLUX_ISO"] >= flux for flux in objects_by_flux.loc[:, "FLUX_ISO"]])
+        features = list(brightest_three.loc[0, :])
+        for rank in (1, 2):
+            delta_x = brightest_three.loc[rank, "X_IMAGE"] - brightest_three.loc[0, "X_IMAGE"]
+            delta_y = brightest_three.loc[rank, "Y_IMAGE"] - brightest_three.loc[0, "Y_IMAGE"]
+            distance = np.sqrt(delta_x ** 2 + delta_y ** 2)
+            features.extend(brightest_three.iloc[rank,])
+            features.extend((delta_x, delta_y, distance))
+        return np.array(features)

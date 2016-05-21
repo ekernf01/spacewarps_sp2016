@@ -98,7 +98,7 @@ class LeNetConvPoolLayer(object):
 
 class LeNet():
     def __init__(self, image_size, get_training_batch, nkerns=[20, 50],
-                 filter_diam = 9, maxpool_size = 2,
+                 filter_diam = 9, maxpool_size = 2, lambduh = 0.01,
                  learning_rate=0.1, batch_size=500):
         """
         :type learning_rate: float
@@ -112,6 +112,8 @@ class LeNet():
         :param get_training_batch: function that returns tuples of the form (images, labels).
         Its sole input is batch_size. See the documentation of
         AstroImageMunger.get_batch for more details.
+        Note: rather than a hasNext() type of interface, get_batch is assumed to have infinite capacity,
+        i.e. automatically cycle back through the data once it reaches the end.
 
         :type nkerns: list of ints
         :param nkerns: number of kernels on each layer
@@ -123,6 +125,7 @@ class LeNet():
         self.rng = np.random.RandomState(23455)
         self.batch_size = batch_size
         self.get_training_batch = get_training_batch
+        self.lambduh = lambduh
 
         print('... building the model')
         #=========  Set up Theano basics  =========
@@ -153,29 +156,48 @@ class LeNet():
 
         #=========  Set up Theano equipment specific to training =========
 
-        self.cost = self.layer3.negative_log_likelihood(self.y)
         # create a list of all model parameters to be fit by gradient descent
-        self.params = self.layer3.params + self.layer2.params + self.layer1.params + self.layer0.params
-        # create a list of gradients for all model parameters
-        self.grads = T.grad(self.cost, self.params)
+        self.param_arrays = self.layer3.params + self.layer2.params + self.layer1.params + self.layer0.params
+
+        #penalized loss function
+        self.err = self.layer3.negative_log_likelihood(self.y)
+        self.penalty = self.lambduh * T.sum([T.sum(w ** 2) for w in self.param_arrays])
+        self.cost = self.err + self.penalty
+
+        # create a list of gradients
+        self.grads = T.grad(self.cost, self.param_arrays)
+
         # train_model is a function that updates the model parameters by
         # SGD Since this model has many parameters, it would be tedious to
         # manually create an update rule for each model parameter. We thus
         # create the updates list by automatically looping over all
         # (params[i], grads[i]) pairs.
+        self.iter = theano.shared(1)
         self.updates = [
-            (param_i, param_i - learning_rate * grad_i)
-            for param_i, grad_i in zip(self.params, self.grads)
+            (param_i, param_i - (learning_rate / self.iter) * grad_i)
+            for param_i, grad_i in zip(self.param_arrays, self.grads)
         ]
         self.train_set_x_T = theano.shared(batch_template_xy[0])
         self.train_set_y_T = theano.shared(batch_template_xy[1])
         self.train_model = theano.function(
             [],
-            self.cost,
+            [self.cost, self.err, self.penalty],
             updates=self.updates,
             givens={self.x:self.train_set_x_T, self.y:self.train_set_y_T}
         )
 
+        self.updates = [
+            (param_i, param_i_loaded)
+            for param_i, param_i_loaded in zip(self.param_arrays, )
+            ]
+        self.train_set_x_T = theano.shared(batch_template_xy[0])
+        self.train_set_y_T = theano.shared(batch_template_xy[1])
+        self.train_model = theano.function(
+            [],
+            [self.cost, self.err, self.penalty],
+            updates=self.updates,
+            givens={self.x: self.train_set_x_T, self.y: self.train_set_y_T}
+        )
         return
 
     def fit(self, n_batches):
@@ -183,9 +205,12 @@ class LeNet():
         for i in range(n_batches):
             print("Training batch ", i, " of ", n_batches)
             train_set_x, train_set_y = self.get_training_batch(batch_size = self.batch_size)
+            print("First 5 labels :" , train_set_y[0:5] , "first pixel:" , train_set_x[0,0,0,0])
             self.train_set_x_T.set_value(train_set_x)
             self.train_set_y_T.set_value(train_set_y)
-            self.train_model()
+            self.iter.set_value(i + 1)
+            cost, err, penalty = self.train_model()
+            print('Cost, error, penalty on this batch is ', cost, err, penalty)
         end_time = timeit.default_timer()
         print(('The code for file ' +
                os.path.split(__file__)[1] +
@@ -240,3 +265,4 @@ class LeNet():
         for i in range(2):
             image_size[i] = self.update_image_size(image_size[i])
         return layer0, image_size
+
