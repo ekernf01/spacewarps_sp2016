@@ -2,21 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="85508a25-5d9a-4f18-bac8-5cf0a4b6b183" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/results/TPR versus FPR for max_depth 2.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/results/TPR versus FPR for max_depth 3.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/results/TPR versus FPR for max_depth 4.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/results/TPR versus FPR for max_depth 5.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/results/trees|max_depth_DEBUG_MODE.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/results/trees|num_trees_DEBUG_MODE.png" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/results/lenet|nkern_DEBUG_MODE.png" afterPath="$PROJECT_DIR$/results/lenet|nkern_DEBUG_MODE.png" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/AstroImageMunger.py" afterPath="$PROJECT_DIR$/AstroImageMunger.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LensClassifierExperiment.py" afterPath="$PROJECT_DIR$/LensClassifierExperiment.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TheanoCNN.py" afterPath="$PROJECT_DIR$/TheanoCNN.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/TheanoExtras.py" afterPath="$PROJECT_DIR$/TheanoExtras.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/experiment_script.py" afterPath="$PROJECT_DIR$/experiment_script.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/setup_script.py" afterPath="$PROJECT_DIR$/setup_script.py" />
     </list>
     <ignored path="code.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -37,18 +23,6 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="LensClassifierExperiment.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/LensClassifierExperiment.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="233">
-              <caret line="72" column="66" selection-start-line="72" selection-start-column="66" selection-end-line="72" selection-end-column="66" />
-              <folding>
-                <element signature="e#0#22#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="AstroImageMunger.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/AstroImageMunger.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -61,22 +35,36 @@
           </provider>
         </entry>
       </file>
+      <file leaf-file-name="LensClassifierExperiment.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/LensClassifierExperiment.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="157">
+              <caret line="82" column="25" selection-start-line="82" selection-start-column="25" selection-end-line="82" selection-end-column="25" />
+              <folding>
+                <element signature="e#0#22#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="experiment_script.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/experiment_script.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
-              <caret line="8" column="0" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
+            <state relative-caret-position="75">
+              <caret line="5" column="0" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="TheanoCNN.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="TheanoCNN.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/TheanoCNN.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="149">
-              <caret line="188" column="0" selection-start-line="188" selection-start-column="0" selection-end-line="191" selection-end-column="13" />
-              <folding />
+            <state relative-caret-position="980">
+              <caret line="122" column="41" selection-start-line="122" selection-start-column="41" selection-end-line="122" selection-end-column="41" />
+              <folding>
+                <element signature="e#77#114#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -84,7 +72,7 @@
       <file leaf-file-name="TheanoExtras.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/TheanoExtras.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="218">
+            <state relative-caret-position="248">
               <caret line="180" column="17" selection-start-line="180" selection-start-column="17" selection-end-line="180" selection-end-column="17" />
               <folding>
                 <element signature="e#76#89#0" expanded="true" />
@@ -104,11 +92,11 @@
         <option value="$PROJECT_DIR$/boosted_trees.py" />
         <option value="$PROJECT_DIR$/theano_cnn_call.py" />
         <option value="$PROJECT_DIR$/setup_script.py" />
-        <option value="$PROJECT_DIR$/experiment_script.py" />
         <option value="$PROJECT_DIR$/AstroImageMunger.py" />
         <option value="$PROJECT_DIR$/TheanoExtras.py" />
-        <option value="$PROJECT_DIR$/TheanoCNN.py" />
+        <option value="$PROJECT_DIR$/experiment_script.py" />
         <option value="$PROJECT_DIR$/LensClassifierExperiment.py" />
+        <option value="$PROJECT_DIR$/TheanoCNN.py" />
       </list>
     </option>
   </component>
@@ -399,11 +387,11 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="true" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32848838" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32944608" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2521866" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32848838" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.39941692" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39941692" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -434,7 +422,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/LensClassifierExperiment.py</url>
-          <line>90</line>
+          <line>95</line>
           <option name="timeStamp" value="15" />
         </line-breakpoint>
       </breakpoints>
@@ -553,13 +541,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/pickle.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="863" column="0" selection-start-line="863" selection-start-column="0" selection-end-line="863" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_bundle/pydev_monkey_qt.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="188">
@@ -600,32 +581,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/experiment_script.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
-          <caret line="8" column="0" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/TheanoExtras.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="218">
-          <caret line="180" column="17" selection-start-line="180" selection-start-column="17" selection-end-line="180" selection-end-column="17" />
-          <folding>
-            <element signature="e#76#89#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/TheanoCNN.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="149">
-          <caret line="188" column="0" selection-start-line="188" selection-start-column="0" selection-end-line="191" selection-end-column="13" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/AstroImageMunger.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="180">
@@ -636,12 +591,48 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/TheanoExtras.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="248">
+          <caret line="180" column="17" selection-start-line="180" selection-start-column="17" selection-end-line="180" selection-end-column="17" />
+          <folding>
+            <element signature="e#76#89#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/experiment_script.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="5" column="0" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/pickle.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="161">
+          <caret line="1375" column="0" selection-start-line="1375" selection-start-column="0" selection-end-line="1375" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/LensClassifierExperiment.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="233">
-          <caret line="72" column="66" selection-start-line="72" selection-start-column="66" selection-end-line="72" selection-end-column="66" />
+        <state relative-caret-position="157">
+          <caret line="82" column="25" selection-start-line="82" selection-start-column="25" selection-end-line="82" selection-end-column="25" />
           <folding>
             <element signature="e#0#22#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/TheanoCNN.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="980">
+          <caret line="122" column="41" selection-start-line="122" selection-start-column="41" selection-end-line="122" selection-end-column="41" />
+          <folding>
+            <element signature="e#77#114#0" expanded="true" />
           </folding>
         </state>
       </provider>
