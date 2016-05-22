@@ -8,6 +8,7 @@ import sys
 import timeit
 
 import numpy as np
+import pickle as pkl
 rng = np.random.RandomState(23455)
 
 
@@ -97,13 +98,12 @@ class LeNetConvPoolLayer(object):
         self.input = input
 
 class LeNet():
-    def __init__(self, image_size, get_training_batch, nkerns=[20, 50],
+    def __init__(self, image_size = None, get_training_batch = None, nkerns=[20, 50],
                  filter_diam = 9, maxpool_size = 2, lambduh = 0.01,
-                 learning_rate=0.1, batch_size=500):
+                 batch_size = 20, path = None):
         """
-        :type learning_rate: float
-        :param learning_rate: learning rate used (factor for the stochastic
-                              gradient)
+        :type avg_learning_rate: float
+        :param avg_learning_rate: average learning rate (learning rate decays over time )
 
         :type n_batches: int
         :param n_batches: maximal number of batches to run the optimizer
@@ -118,14 +118,33 @@ class LeNet():
         :type nkerns: list of ints
         :param nkerns: number of kernels on each layer
         """
+        if not path is None:
+            with open(path, "rb") as f:
+                loaded_dict = pkl.load(f)
+
+            image_size = loaded_dict["init_image_size"]
+            get_training_batch = None
+            nkerns = loaded_dict["nkerns"]
+            filter_diam = loaded_dict["filter_diam"]
+            maxpool_size = loaded_dict["maxpool_size"]
+            lambduh = loaded_dict["lambduh"]
+            batch_size = loaded_dict["batch_size"]
+
+        else:
+            assert not any((image_size is None, get_training_batch is None))
+
+        self.init_image_size = list(image_size)
         self.filter_diam = filter_diam
         self.batch_size = batch_size
         self.filter_diam = filter_diam
         self.maxpool_size = maxpool_size
+        self.nkerns = nkerns
         self.rng = np.random.RandomState(23455)
         self.batch_size = batch_size
         self.get_training_batch = get_training_batch
         self.lambduh = lambduh
+        self.avg_learning_rate = 0.1
+        self.init_learning_rate = 10
 
         print('... building the model')
         #=========  Set up Theano basics  =========
@@ -135,8 +154,11 @@ class LeNet():
         self.y = T.ivector("y")
 
         #set up two convolutional pooling layers
-        self.layer0, image_size = self.do_conv_pool(self.x,             image_size, nkern = nkerns[0], nkern_prev = image_size[2])
-        self.layer1, image_size = self.do_conv_pool(self.layer0.output, image_size, nkern = nkerns[1], nkern_prev = nkerns[0])
+        self.layer0, image_size = self.do_conv_pool(self.x,             image_size,
+                                                    nkern = self.nkerns[0], nkern_prev = image_size[2])
+        self.layer1, image_size = self.do_conv_pool(self.layer0.output, image_size,
+                                                    nkern = self.nkerns[1], nkern_prev = nkerns[0])
+
         # the HiddenLayer being fully-connected, it operates on 2D matrices of
         # shape (batch_size, num_pixels) (i.e matrix of rasterized images).
         self.layer2_input = self.layer1.output.flatten(2)
@@ -152,9 +174,6 @@ class LeNet():
         # classify the values of the fully-connected sigmoidal layer
         self.layer3 = LogisticRegression(input=self.layer2.output, n_in=500, n_out=2)
         # the cost we minimize during training is the NLL of the model
-        batch_template_xy = self.get_training_batch(batch_size = batch_size)
-
-        #=========  Set up Theano equipment specific to training =========
 
         # create a list of all model parameters to be fit by gradient descent
         self.param_arrays = self.layer3.params + self.layer2.params + self.layer1.params + self.layer0.params
@@ -167,50 +186,84 @@ class LeNet():
         # create a list of gradients
         self.grads = T.grad(self.cost, self.param_arrays)
 
-        # train_model is a function that updates the model parameters by
-        # SGD Since this model has many parameters, it would be tedious to
-        # manually create an update rule for each model parameter. We thus
-        # create the updates list by automatically looping over all
-        # (params[i], grads[i]) pairs.
-        self.iter = theano.shared(1)
-        self.updates = [
-            (param_i, param_i - (learning_rate / self.iter) * grad_i)
-            for param_i, grad_i in zip(self.param_arrays, self.grads)
-        ]
-        self.train_set_x_T = theano.shared(batch_template_xy[0])
-        self.train_set_y_T = theano.shared(batch_template_xy[1])
-        self.train_model = theano.function(
-            [],
-            [self.cost, self.err, self.penalty],
-            updates=self.updates,
-            givens={self.x:self.train_set_x_T, self.y:self.train_set_y_T}
-        )
 
-        self.updates = [
-            (param_i, param_i_loaded)
-            for param_i, param_i_loaded in zip(self.param_arrays, )
+        #=========  Set up Theano equipment specific to training =========
+        if path is None:
+            # train_model is a function that updates the model parameters by
+            # SGD. Since this model has many parameters, it would be tedious to
+            # manually create an update rule for each model parameter. We thus
+            # create the updates list by automatically looping over all
+            # (params[i], grads[i]) pairs.
+            self.iter = theano.shared(1)
+            self.train_updates = [
+                (param_i, param_i - (self.init_learning_rate / self.iter) * grad_i)
+                for param_i, grad_i in zip(self.param_arrays, self.grads)
             ]
-        self.train_set_x_T = theano.shared(batch_template_xy[0])
-        self.train_set_y_T = theano.shared(batch_template_xy[1])
-        self.train_model = theano.function(
-            [],
-            [self.cost, self.err, self.penalty],
-            updates=self.updates,
-            givens={self.x: self.train_set_x_T, self.y: self.train_set_y_T}
-        )
+            batch_template_xy = self.get_training_batch(batch_size = batch_size)
+            self.train_set_x_T = theano.shared(batch_template_xy[0])
+            self.train_set_y_T = theano.shared(batch_template_xy[1])
+            self.train_model = theano.function(
+                [],
+                [],
+                updates=self.train_updates,
+                givens={self.x:self.train_set_x_T, self.y:self.train_set_y_T}
+            )
+
+            self.train_verbose = theano.function(
+                [],
+                [self.cost, self.err, self.penalty],
+                updates=self.train_updates,
+                givens={self.x:self.train_set_x_T, self.y:self.train_set_y_T}
+            )
+
+        #========= Loading =========
+        if not path is None:
+            loaded_param_arrays = loaded_dict["param_arrays"]
+            self.loading_updates = [
+                (w, theano.shared(w_load))
+                for w, w_load in zip(self.param_arrays, loaded_param_arrays)
+                ]
+
+            load_model = theano.function( [], [], updates=self.loading_updates)
+            load_model()
+
+        return
+
+    def save(self, net_path):
+        #reveal = theano.function([input], output)
+        print("Saving net. When this is loaded again, it will not be capable of training.")
+        dict_to_save = {
+            "init_image_size":self.init_image_size,
+            "nkerns":self.nkerns,
+            "filter_diam":self.filter_diam,
+            "maxpool_size":self.maxpool_size,
+            "lambduh":self.lambduh,
+            "batch_size":self.batch_size,
+
+            "param_arrays":[w.eval() for w in self.param_arrays]
+        }
+        with open(net_path, "wb") as f:
+            pkl.dump(file = f, obj = dict_to_save)
         return
 
     def fit(self, n_batches):
+        # if the learning rate were static, its sum over time would be n_batches*avg_learning_rate
+        # since it's actually init_learning_rate / iter, the sum over time is roughly log(n_batches)*init_learning_rate
+        # To boost this back to normal:
+        self.init_learning_rate = self.avg_learning_rate * n_batches / np.log(n_batches)
         start_time = timeit.default_timer()
         for i in range(n_batches):
-            print("Training batch ", i, " of ", n_batches)
             train_set_x, train_set_y = self.get_training_batch(batch_size = self.batch_size)
-            print("First 5 labels :" , train_set_y[0:5] , "first pixel:" , train_set_x[0,0,0,0])
             self.train_set_x_T.set_value(train_set_x)
             self.train_set_y_T.set_value(train_set_y)
             self.iter.set_value(i + 1)
-            cost, err, penalty = self.train_model()
-            print('Cost, error, penalty on this batch is ', cost, err, penalty)
+            if i % 10 == 0:
+                print("Training batch ", i, " of ", n_batches, "; batch_size = ", self.batch_size)
+                print("First 5 labels :", train_set_y[0:5], "first pixel:", train_set_x[0, 0, 0, 0])
+                cost, err, penalty = self.train_verbose()
+                print('Cost, error, penalty on this batch is ', cost, err, penalty)
+            else:
+                self.train_model()
         end_time = timeit.default_timer()
         print(('The code for file ' +
                os.path.split(__file__)[1] +
@@ -265,4 +318,5 @@ class LeNet():
         for i in range(2):
             image_size[i] = self.update_image_size(image_size[i])
         return layer0, image_size
+
 
