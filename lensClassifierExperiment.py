@@ -41,7 +41,7 @@ class LensClassifierExperiment():
         elif experiment_type in ['trees|3obj|max_depth', 'trees|3obj|num_trees']:
             NUM_FEATURES = self.swmunge.SEXTRACTOR_FT_OUT * 3 + 6
             datum_type = "sextractor|3obj"
-        elif experiment_type == 'lenet|nkern':
+        elif experiment_type == 'lenet|nkern|lambda':
             return
         else:
             raise Exception("Invalid experiment type or out-of-date code in init_features")

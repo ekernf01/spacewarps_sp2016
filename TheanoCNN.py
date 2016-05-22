@@ -318,6 +318,8 @@ class LeNet():
                 )
         for i in range(2):
             image_size[i] = self.update_image_size(image_size[i])
+            assert image_size[i] <= 96
+
         return layer0, image_size
 
 
