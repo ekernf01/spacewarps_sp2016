@@ -27,7 +27,7 @@ class LensClassifierExperiment():
         self.static_batch = self.swmunge.get_batch(self.batch_size, CV_type="train")
         self.labels_train = np.zeros(self.n_train)
         self.labels_test  = np.zeros(self.n_test)
-        self.valid_exp_names = ['lenet|nkern',
+        self.valid_exp_names = ['lenet|nkern|lambda',
                                 'trees|1obj|max_depth', 'trees|1obj|num_trees',
                                 'trees|3obj|max_depth', 'trees|3obj|num_trees']
         self.suggested_parvals = [[0.001, 0.01, 0.1, 1],
@@ -74,7 +74,7 @@ class LensClassifierExperiment():
             elif experiment_type in ("trees|1obj|num_trees, trees|3obj|num_trees"):
                 model = sklearn.ensemble.GradientBoostingClassifier(max_depth=5, n_estimators=par)
                 model.fit(X=self.features_train, y=self.labels_train)
-            elif experiment_type == "lenet|nkern":
+            elif experiment_type == "lenet|nkern|lambda":
                 model = TheanoCNN.LeNet(image_size = list(self.swmunge.image_shape), nkerns = [10, 10], lambduh = par,
                                         get_training_batch = self.get_training_batch, batch_size=self.batch_size)
                 num_passes = 4
@@ -86,6 +86,7 @@ class LensClassifierExperiment():
             elif experiment_type in self.valid_exp_names:
                 raise Exception("Oops! Programming error! self.valid_exp_names doesn't match this block of conditionals.")
             else:
+                print experiment_type
                 raise Exception("experiment_type not valid. Must be one of " + ", ".join(self.valid_exp_names))
 
             preds = model.predict_proba(self.features_test)
