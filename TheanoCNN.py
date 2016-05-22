@@ -177,11 +177,10 @@ class LeNet():
 
         # create a list of all model parameters to be fit by gradient descent
         self.param_arrays = self.layer3.params + self.layer2.params + self.layer1.params + self.layer0.params
-        self.params_to_reg = [self.layer3.W]   + self.layer2.params + self.layer1.params + self.layer0.params
 
         #penalized loss function
         self.err = self.layer3.negative_log_likelihood(self.y)
-        self.penalty = self.lambduh * T.sum([T.sum(w ** 2) for w in self.params_to_reg])
+        self.penalty = self.lambduh * T.sum([T.sum(w ** 2) for w in self.param_arrays])
         self.cost = self.err + self.penalty
 
         # create a list of gradients

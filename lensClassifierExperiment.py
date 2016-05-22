@@ -21,7 +21,7 @@ class LensClassifierExperiment():
             self.n_train = self.n_train / 20
             self.n_test = self.n_test / 20
             self.batch_size = 20
-            self.n_distinct_batches = 1
+            self.n_distinct_batches = 10
             self.debug_mode_string = "_DEBUG_MODE"
 
         self.static_batch = self.swmunge.get_batch(self.batch_size, CV_type="train")
@@ -30,7 +30,7 @@ class LensClassifierExperiment():
         self.valid_exp_names = ['lenet|nkern|lambda',
                                 'trees|1obj|max_depth', 'trees|1obj|num_trees',
                                 'trees|3obj|max_depth', 'trees|3obj|num_trees']
-        self.suggested_parvals = [[0.0000001, 0.00001, 0.001],
+        self.suggested_parvals = [[0.0000001, 0.00001],
                                   [2,3,4,5], [50, 100, 250],
                                   [2,3,4,5], [50, 100, 250]]
 
@@ -90,6 +90,8 @@ class LensClassifierExperiment():
                 raise Exception("experiment_type not valid. Must be one of " + ", ".join(self.valid_exp_names))
 
             preds = model.predict_proba(self.features_test)
+            print "Test proportion: " + str(np.mean(self.labels_test))
+            print "preds mean: " + str(np.mean(preds[:, 1]))
             fpr, tpr, thresh = sklearn.metrics.roc_curve(y_true = self.labels_test, y_score = preds[:, 1])
             fprs.extend(fpr)
             tprs.extend(tpr)
