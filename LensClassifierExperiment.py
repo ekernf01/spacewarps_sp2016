@@ -8,21 +8,19 @@ import TheanoCNN
 
 class LensClassifierExperiment():
 
-    def __init__(self, debug_mode = False):
+    def __init__(self, mode = "full_run"):
         self.swmunge = AstroImageMunger()
         self.n_train = int(round(11512 * 9 / 10))
         self.n_test  = int(round(11512 / 10))
-        self.debug_mode = debug_mode
+        self.mode = mode
         self.batch_size = 200
         self.n_distinct_batches = int(np.ceil(self.n_train / float(self.batch_size)))
-        self.debug_mode_string = ""
 
-        if self.debug_mode:
+        if self.mode in ("debug", "dry_run"):
             self.n_train = self.n_train / 20
             self.n_test = self.n_test / 20
             self.batch_size = 20
             self.n_distinct_batches = 10
-            self.debug_mode_string = "_DEBUG_MODE"
 
         self.static_batch = self.swmunge.get_batch(self.batch_size, CV_type="train")
         self.labels_train = np.zeros(self.n_train)
@@ -59,7 +57,7 @@ class LensClassifierExperiment():
         return
 
     def get_training_batch(self, batch_size):
-        if self.debug_mode:
+        if self.mode == "debug":
             return self.static_batch
         return self.swmunge.get_batch(batch_size, CV_type="train")
 
@@ -96,10 +94,10 @@ class LensClassifierExperiment():
 
                 model = TheanoCNN.LeNet(image_size = list(self.swmunge.image_shape), nkerns = nkerns, lambduh = lambduh,
                                         get_training_batch = self.get_training_batch, batch_size=self.batch_size,
-                                        debug_mode = self.debug_mode)
+                                        mode = self.mode)
 
                 model.fit(self.n_distinct_batches * num_passes)
-                net_path = "results/saved_net_lam=" + str(par) + self.debug_mode_string + ".pkl"
+                net_path = "results/saved_net_" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".pkl"
                 model.save(net_path)
                 model = TheanoCNN.LeNet(path = net_path)
                 self.features_test, self.labels_test = self.swmunge.get_batch(self.n_test, CV_type="test")
