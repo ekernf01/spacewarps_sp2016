@@ -18,7 +18,7 @@ from theano.tensor.signal import downsample
 from theano.tensor.nnet import conv2d
 
 from TheanoExtras import LogisticRegression, HiddenLayer
-
+import matplotlib.pyplot as plt
 
 class LeNetConvPoolLayer(object):
     """Pool Layer of a convolutional network """
@@ -177,6 +177,7 @@ class LeNet():
 
         # create a list of all model parameters to be fit by gradient descent
         self.param_arrays = self.layer3.params + self.layer2.params + self.layer1.params + self.layer0.params
+        self.param_names = ["l3w", "l3b", "l2w", "l2b", "l1w", "l1b", "l0w", "l0b"]
 
         #penalized loss function
         self.err = self.layer3.negative_log_likelihood(self.y)
@@ -246,6 +247,25 @@ class LeNet():
             pkl.dump(file = f, obj = dict_to_save)
         return
 
+    def plot(self):
+        for name, w in zip(self.param_names, self.param_arrays):
+            self.plot_utility(w.eval(), name)
+        return
+
+    def plot_utility(self, w, name):
+        plt.clf()
+        if len(w.shape) == 1:
+            plt.plot(range(len(w)), w)
+        elif len(w.shape) == 2 and w.shape[1] == 2:
+            plt.plot(range(w.shape[0]), w[:, 1])
+        else:
+            first_half_dims = int(np.product(w.shape[0:int(np.floor(len(w.shape) / 2.0))]))
+            plt.imshow(w.reshape(first_half_dims, -1))
+        plt.title( name + ", shape = " + str(w.shape) + \
+                  ", (max, min) = " + str(np.max(w), np.min(w)) )
+        plt.show()
+        return
+
     def fit(self, n_batches):
         # if the learning rate were static, its sum over time would be n_batches*avg_learning_rate
         # since it's actually init_learning_rate / iter, the sum over time is roughly log(n_batches)*init_learning_rate
@@ -262,6 +282,8 @@ class LeNet():
                 print("First 5 labels :", train_set_y[0:5], "first pixel:", train_set_x[0, 0, 0, 0])
                 cost, err, penalty = self.train_verbose()
                 print('Cost, error, penalty on this batch is ', cost, err, penalty)
+                print("Plotting coeffs:")
+                self.plot()
             else:
                 self.train_model()
         end_time = timeit.default_timer()

@@ -30,7 +30,7 @@ class LensClassifierExperiment():
         self.valid_exp_names = ['lenet|nkern|lambda',
                                 'trees|1obj|max_depth', 'trees|1obj|num_trees',
                                 'trees|3obj|max_depth', 'trees|3obj|num_trees']
-        self.suggested_parvals = [[0.0000001, 0.00001],
+        self.suggested_parvals = [[10 ** -7, 10 ** -5],
                                   [2,3,4,5], [50, 100, 250],
                                   [2,3,4,5], [50, 100, 250]]
 
