@@ -11,13 +11,14 @@ import numpy as np
 import pickle as pkl
 rng = np.random.RandomState(23455)
 
-
 import theano
 import theano.tensor as T
 from theano.tensor.signal import downsample
 from theano.tensor.nnet import conv2d
-
 from TheanoExtras import LogisticRegression, HiddenLayer
+def relu(x):
+    return theano.tensor.switch(x < 0, 0, x)
+
 import matplotlib.pyplot as plt
 
 class LeNetConvPoolLayer(object):
@@ -89,7 +90,7 @@ class LeNetConvPoolLayer(object):
         # reshape it to a tensor of shape (1, n_filters, 1, 1). Each bias will
         # thus be broadcasted across mini-batches and feature map
         # width & height
-        self.output = T.tanh(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+        self.output = relu(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
         # store parameters of this layer
         self.params = [self.W, self.b]
@@ -153,6 +154,8 @@ class LeNet():
         self.x = T.dtensor4("x")
         self.y = T.ivector("y")
 
+
+
         #set up two convolutional pooling layers
         self.layer0, image_size = self.do_conv_pool(self.x,             image_size,
                                                     nkern = self.nkerns[0], nkern_prev = image_size[2])
@@ -168,7 +171,7 @@ class LeNet():
             input=self.layer2_input,
             n_in=nkerns[1] * image_size[0] * image_size[1],
             n_out=500,
-            activation=T.tanh
+            activation=relu
         )
 
         # classify the values of the fully-connected sigmoidal layer
@@ -178,10 +181,11 @@ class LeNet():
         # create a list of all model parameters to be fit by gradient descent
         self.param_arrays = self.layer3.params + self.layer2.params + self.layer1.params + self.layer0.params
         self.param_names = ["l3w", "l3b", "l2w", "l2b", "l1w", "l1b", "l0w", "l0b"]
+        self.weight_arrays = [self.layer3.W, self.layer2.W, self.layer1.W, self.layer0.W]
 
         #penalized loss function
         self.err = self.layer3.negative_log_likelihood(self.y)
-        self.penalty = self.lambduh * T.sum([T.sum(w ** 2) for w in self.param_arrays])
+        self.penalty = self.lambduh * T.sum([T.sum(w ** 2) for w in self.weight_arrays])
         self.cost = self.err + self.penalty
 
         # create a list of gradients
@@ -262,7 +266,7 @@ class LeNet():
             first_half_dims = int(np.product(w.shape[0:int(np.floor(len(w.shape) / 2.0))]))
             plt.imshow(w.reshape(first_half_dims, -1))
         plt.title( name + ", shape = " + str(w.shape) + \
-                  ", (max, min) = " + str(np.max(w), np.min(w)) )
+                  ", (max, min) = " + str((np.max(w), np.min(w))) )
         plt.show()
         return
 

@@ -30,7 +30,7 @@ class LensClassifierExperiment():
         self.valid_exp_names = ['lenet|nkern|lambda',
                                 'trees|1obj|max_depth', 'trees|1obj|num_trees',
                                 'trees|3obj|max_depth', 'trees|3obj|num_trees']
-        self.suggested_parvals = [[10 ** -7, 10 ** -5],
+        self.suggested_parvals = [[1], #[10 ** -7, 10 ** -5],
                                   [2,3,4,5], [50, 100, 250],
                                   [2,3,4,5], [50, 100, 250]]
 
@@ -55,8 +55,8 @@ class LensClassifierExperiment():
         return
 
     def get_training_batch(self, batch_size):
-        #if self.debug_mode:
-        #    return self.static_batch
+        if self.debug_mode:
+            return self.static_batch
         return self.swmunge.get_batch(batch_size, CV_type="train")
 
     def run(self, experiment_type, parvals):
