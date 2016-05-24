@@ -100,7 +100,7 @@ class LeNetConvPoolLayer(object):
 class LeNet():
     def __init__(self, image_size = None, get_training_batch = None, nkerns=[20, 50],
                  filter_diam = 9, maxpool_size = 2, lambduh = 0.01,
-                 batch_size = 20, path = None):
+                 batch_size = 20, path = None, debug_mode = False):
         """
         :type  learning_rate: float
         :param learning_rate: initial learning rate (learning rate decays over time )
@@ -129,6 +129,7 @@ class LeNet():
             maxpool_size = loaded_dict["maxpool_size"]
             lambduh = loaded_dict["lambduh"]
             batch_size = loaded_dict["batch_size"]
+            debug_mode = False
 
         else:
             assert not any((image_size is None, get_training_batch is None))
@@ -143,6 +144,7 @@ class LeNet():
         self.batch_size = batch_size
         self.get_training_batch = get_training_batch
         self.lambduh = lambduh
+        self.debug_mode = debug_mode
         self.learning_rate = 0.1
 
         print('... building the model')
@@ -281,7 +283,9 @@ class LeNet():
             self.train_set_x_T.set_value(train_set_x)
             self.train_set_y_T.set_value(train_set_y)
             self.iter.set_value(i + 1)
-            if i % 10 == 0:
+            if i % 50 == 0:
+                print("Training batch ", i, " of ", n_batches, "; batch_size = ", self.batch_size)
+            if i % 10 == 0 and self.debug_mode:
                 print("Training batch ", i, " of ", n_batches, "; batch_size = ", self.batch_size)
                 print("First 5 labels :", train_set_y[0:5], "first pixel:", train_set_x[0, 0, 0, 0])
                 cost, err, penalty = self.train_verbose()
