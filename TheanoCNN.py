@@ -184,9 +184,9 @@ class LeNet():
                               self.layer2.b, self.layer1.b, self.layer0.b]
 
         #penalized loss function
-        self.err = self.layer3.negative_log_likelihood(self.y)
+        self.err = self.layer3.negative_log_likelihood(self.y) / 1000
         self.penalty = self.lambduh * T.sum([T.sum(w ** 2) for w in self.weight_arrays])
-        self.cost = (self.penalty + self.err) / 1000
+        self.cost = self.penalty + self.err
 
         # create a list of gradients
         self.grads = T.grad(self.cost, self.param_arrays)
@@ -255,13 +255,15 @@ class LeNet():
         width = 2
         height = int(np.ceil(len(self.param_arrays) / width))
         for i, w in enumerate(self.param_arrays):
-            plt.subplot(height, width, i)
+            plt.subplot(height, width, i + 1)
             self.plot_utility(w.eval(), self.param_names[i])
         plt.show()
         return
 
     def plot_utility(self, w, name):
-        if len(w.shape) == 1:
+        if w.shape == (2,):
+            plt.plot((w[0], -w[1]))
+        elif len(w.shape) == 1:
             plt.plot(range(len(w)), w)
         elif len(w.shape) == 2 and w.shape[1] == 2:
             plt.plot(range(w.shape[0]), w[:, 1])
@@ -279,7 +281,7 @@ class LeNet():
             self.train_set_x_T.set_value(train_set_x)
             self.train_set_y_T.set_value(train_set_y)
             self.iter.set_value(i + 1)
-            if i % 1 == 0:
+            if i % 10 == 0:
                 print("Training batch ", i, " of ", n_batches, "; batch_size = ", self.batch_size)
                 print("First 5 labels :", train_set_y[0:5], "first pixel:", train_set_x[0, 0, 0, 0])
                 cost, err, penalty = self.train_verbose()
