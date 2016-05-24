@@ -16,8 +16,7 @@ import theano.tensor as T
 from theano.tensor.signal import downsample
 from theano.tensor.nnet import conv2d
 from TheanoExtras import LogisticRegression, HiddenLayer
-def relu(x):
-    return theano.tensor.switch(x < 0, 0, x)
+from theano.tensor.nnet import softplus
 
 import matplotlib.pyplot as plt
 
@@ -90,7 +89,7 @@ class LeNetConvPoolLayer(object):
         # reshape it to a tensor of shape (1, n_filters, 1, 1). Each bias will
         # thus be broadcasted across mini-batches and feature map
         # width & height
-        self.output = relu(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
+        self.output = softplus(pooled_out + self.b.dimshuffle('x', 0, 'x', 'x'))
 
         # store parameters of this layer
         self.params = [self.W, self.b]
@@ -103,8 +102,8 @@ class LeNet():
                  filter_diam = 9, maxpool_size = 2, lambduh = 0.01,
                  batch_size = 20, path = None):
         """
-        :type avg_learning_rate: float
-        :param avg_learning_rate: average learning rate (learning rate decays over time )
+        :type  learning_rate: float
+        :param learning_rate: initial learning rate (learning rate decays over time )
 
         :type n_batches: int
         :param n_batches: maximal number of batches to run the optimizer
@@ -144,8 +143,7 @@ class LeNet():
         self.batch_size = batch_size
         self.get_training_batch = get_training_batch
         self.lambduh = lambduh
-        self.avg_learning_rate = 0.1
-        self.init_learning_rate = 10
+        self.learning_rate = 0.1
 
         print('... building the model')
         #=========  Set up Theano basics  =========
@@ -171,7 +169,7 @@ class LeNet():
             input=self.layer2_input,
             n_in=nkerns[1] * image_size[0] * image_size[1],
             n_out=500,
-            activation=relu
+            activation=softplus
         )
 
         # classify the values of the fully-connected sigmoidal layer
@@ -181,16 +179,17 @@ class LeNet():
         # create a list of all model parameters to be fit by gradient descent
         self.param_arrays = self.layer3.params + self.layer2.params + self.layer1.params + self.layer0.params
         self.param_names = ["l3w", "l3b", "l2w", "l2b", "l1w", "l1b", "l0w", "l0b"]
-        self.weight_arrays = [self.layer3.W, self.layer2.W, self.layer1.W, self.layer0.W]
+        self.weight_arrays = [self.layer3.W,
+                              self.layer2.W, self.layer1.W, self.layer0.W,
+                              self.layer2.b, self.layer1.b, self.layer0.b]
 
         #penalized loss function
         self.err = self.layer3.negative_log_likelihood(self.y)
         self.penalty = self.lambduh * T.sum([T.sum(w ** 2) for w in self.weight_arrays])
-        self.cost = self.err + self.penalty
+        self.cost = (self.penalty + self.err) / 1000
 
         # create a list of gradients
         self.grads = T.grad(self.cost, self.param_arrays)
-
 
         #=========  Set up Theano equipment specific to training =========
         if path is None:
@@ -201,7 +200,7 @@ class LeNet():
             # (params[i], grads[i]) pairs.
             self.iter = theano.shared(1)
             self.train_updates = [
-                (param_i, param_i - (self.init_learning_rate / self.iter) * grad_i)
+                (param_i, param_i - (self.learning_rate / self.iter) * grad_i)
                 for param_i, grad_i in zip(self.param_arrays, self.grads)
             ]
             batch_template_xy = self.get_training_batch(batch_size = batch_size)
@@ -252,12 +251,16 @@ class LeNet():
         return
 
     def plot(self):
-        for name, w in zip(self.param_names, self.param_arrays):
-            self.plot_utility(w.eval(), name)
+        plt.clf()
+        width = 2
+        height = int(np.ceil(len(self.param_arrays) / width))
+        for i, w in enumerate(self.param_arrays):
+            plt.subplot(height, width, i)
+            self.plot_utility(w.eval(), self.param_names[i])
+        plt.show()
         return
 
     def plot_utility(self, w, name):
-        plt.clf()
         if len(w.shape) == 1:
             plt.plot(range(len(w)), w)
         elif len(w.shape) == 2 and w.shape[1] == 2:
@@ -265,23 +268,18 @@ class LeNet():
         else:
             first_half_dims = int(np.product(w.shape[0:int(np.floor(len(w.shape) / 2.0))]))
             plt.imshow(w.reshape(first_half_dims, -1))
-        plt.title( name + ", shape = " + str(w.shape) + \
-                  ", (max, min) = " + str((np.max(w), np.min(w))) )
-        plt.show()
+        plt.title( name)# + ", shape = " + str(w.shape) + \
+                  #", (max, min) = " + str((np.max(w), -np.max(-w))) )
         return
 
     def fit(self, n_batches):
-        # if the learning rate were static, its sum over time would be n_batches*avg_learning_rate
-        # since it's actually init_learning_rate / iter, the sum over time is roughly log(n_batches)*init_learning_rate
-        # To boost this back to normal:
-        self.init_learning_rate = self.avg_learning_rate * n_batches / np.log(n_batches)
         start_time = timeit.default_timer()
         for i in range(n_batches):
             train_set_x, train_set_y = self.get_training_batch(batch_size = self.batch_size)
             self.train_set_x_T.set_value(train_set_x)
             self.train_set_y_T.set_value(train_set_y)
             self.iter.set_value(i + 1)
-            if i % 10 == 0:
+            if i % 1 == 0:
                 print("Training batch ", i, " of ", n_batches, "; batch_size = ", self.batch_size)
                 print("First 5 labels :", train_set_y[0:5], "first pixel:", train_set_x[0, 0, 0, 0])
                 cost, err, penalty = self.train_verbose()
