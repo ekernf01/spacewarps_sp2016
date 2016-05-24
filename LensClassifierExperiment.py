@@ -27,10 +27,14 @@ class LensClassifierExperiment():
         self.static_batch = self.swmunge.get_batch(self.batch_size, CV_type="train")
         self.labels_train = np.zeros(self.n_train)
         self.labels_test  = np.zeros(self.n_test)
-        self.valid_exp_names = ['lenet|nkern|lambda',
+        self.valid_exp_names = ['lenet|lambda',
+                                'lenet|nkern',
+                                'lenet|npass',
                                 'trees|1obj|max_depth', 'trees|1obj|num_trees',
                                 'trees|3obj|max_depth', 'trees|3obj|num_trees']
-        self.suggested_parvals = [[10 ** -7, 10 ** -5],
+        self.suggested_parvals = [[10 ** -9, 10 ** -7, 10 ** -5],
+                                  [1, 5, 10],
+                                  [1, 4, 10],
                                   [2,3,4,5], [50, 100, 250],
                                   [2,3,4,5], [50, 100, 250]]
 
@@ -41,7 +45,7 @@ class LensClassifierExperiment():
         elif experiment_type in ['trees|3obj|max_depth', 'trees|3obj|num_trees']:
             NUM_FEATURES = self.swmunge.SEXTRACTOR_FT_OUT * 3 + 6
             datum_type = "sextractor|3obj"
-        elif experiment_type == 'lenet|nkern|lambda':
+        elif experiment_type[0:6] == 'lenet|':
             return
         else:
             raise Exception("Invalid experiment type or out-of-date code in init_features")
@@ -74,10 +78,26 @@ class LensClassifierExperiment():
             elif experiment_type in ("trees|1obj|num_trees, trees|3obj|num_trees"):
                 model = sklearn.ensemble.GradientBoostingClassifier(max_depth=5, n_estimators=par)
                 model.fit(X=self.features_train, y=self.labels_train)
-            elif experiment_type == "lenet|nkern|lambda":
-                model = TheanoCNN.LeNet(image_size = list(self.swmunge.image_shape), nkerns = [10, 10], lambduh = par,
-                                        get_training_batch = self.get_training_batch, batch_size=self.batch_size)
-                num_passes = 4
+            elif experiment_type[0:6] == "lenet|":
+                if experiment_type[6:12] == "lambda":
+                    nkerns = [5, 5]
+                    lambduh = par
+                    num_passes = 4
+                elif experiment_type[6:11] == "nkern":
+                    nkerns = [par, par]
+                    lambduh = 10 ** -7
+                    num_passes = 4
+                elif experiment_type[6:11] == "npass":
+                    nkerns = [5, 5]
+                    lambduh = 10 ** -7
+                    num_passes = par
+                else:
+                    raise Exception("Oops! Programming error! self.valid_exp_names doesn't match this block of conditionals.")
+
+                model = TheanoCNN.LeNet(image_size = list(self.swmunge.image_shape), nkerns = nkerns, lambduh = lambduh,
+                                        get_training_batch = self.get_training_batch, batch_size=self.batch_size,
+                                        debug_mode = self.debug_mode)
+
                 model.fit(self.n_distinct_batches * num_passes)
                 net_path = "results/saved_net_lam=" + str(par) + self.debug_mode_string + ".pkl"
                 model.save(net_path)
