@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 class LeNetConvPoolLayer(object):
     """Pool Layer of a convolutional network """
 
-    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2)):
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
 
@@ -99,7 +99,7 @@ class LeNetConvPoolLayer(object):
 
 class LeNet():
     def __init__(self, image_size = None, get_training_batch = None, nkerns=[20, 50],
-                 filter_diam = 9, maxpool_size = 2, lambduh = 0.01,
+                 filter_diam = 12, maxpool_size = 4, lambduh = 0.01,
                  batch_size = 20, path = None, mode = "full"):
         """
         :type  learning_rate: float
@@ -184,6 +184,9 @@ class LeNet():
         self.weight_arrays = [self.layer3.W,
                               self.layer2.W, self.layer1.W, self.layer0.W,
                               self.layer2.b, self.layer1.b, self.layer0.b]
+
+        print([w.eval().shape for w in self.weight_arrays])
+        print([np.prod(w.eval().shape) for w in self.weight_arrays])
 
         #penalized loss function
         self.err = self.layer3.negative_log_likelihood(self.y) / 1000
@@ -283,7 +286,7 @@ class LeNet():
             self.train_set_x_T.set_value(train_set_x)
             self.train_set_y_T.set_value(train_set_y)
             self.iter.set_value(i + 1)
-            if i % 50 == 0 and self.mode in ("debug", "full") :
+            if i % 50 == 0 and not self.mode == "debug":
                 print("Training batch ", i, " of ", n_batches, "; batch_size = ", self.batch_size)
             if i % 10 == 0 and self.mode=="debug":
                 print("Training batch ", i, " of ", n_batches, "; batch_size = ", self.batch_size)
@@ -335,7 +338,7 @@ class LeNet():
         return np.array(p)
 
     def update_image_size(self, original):
-        return int(np.ceil((original - self.filter_diam + 1) / self.maxpool_size))
+        return int(np.floor((original - self.filter_diam + 1) / self.maxpool_size))
 
     def do_conv_pool(self, layer0_input, image_size, nkern, nkern_prev):
         layer0 = LeNetConvPoolLayer(
@@ -343,12 +346,12 @@ class LeNet():
                 input=layer0_input,
                 image_shape=(self.batch_size, nkern_prev, image_size[0], image_size[1]),
                 filter_shape=(nkern, nkern_prev, self.filter_diam, self.filter_diam),
-                poolsize=(2, 2)
+                poolsize=(self.maxpool_size, self.maxpool_size)
                 )
         for i in range(2):
             image_size[i] = self.update_image_size(image_size[i])
             assert image_size[i] <= 96
-
+        print("image_size:", image_size)
         return layer0, image_size
 
 

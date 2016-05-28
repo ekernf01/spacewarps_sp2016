@@ -16,10 +16,16 @@ class LensClassifierExperiment():
         self.batch_size = 200
         self.n_distinct_batches = int(np.ceil(self.n_train / float(self.batch_size)))
 
-        if self.mode in ("debug", "dry_run"):
+        if self.mode == "debug":
             self.n_train = self.n_train / 20
             self.n_test = self.n_test / 20
             self.batch_size = 20
+            self.n_distinct_batches = 10
+
+        if self.mode == "dry_run":
+            self.n_train = self.n_train / 4
+            self.n_test = self.n_test / 4
+            self.batch_size = 50
             self.n_distinct_batches = 10
 
         self.static_batch = self.swmunge.get_batch(self.batch_size, CV_type="train")
@@ -30,7 +36,7 @@ class LensClassifierExperiment():
                                 'lenet|npass',
                                 'trees|1obj|max_depth', 'trees|1obj|num_trees',
                                 'trees|3obj|max_depth', 'trees|3obj|num_trees']
-        self.suggested_parvals = [[10 ** -9, 10 ** -7, 10 ** -5],
+        self.suggested_parvals = [[10 ** -13, 10 ** -11, 10 ** -9, 10 ** -7, 10 ** -5, 10 ** -3],
                                   [1, 5, 10],
                                   [1, 4, 10],
                                   [2,3,4,5], [50, 100, 250],
@@ -122,5 +128,5 @@ class LensClassifierExperiment():
         p = gg.ggplot(data = to_plot, aesthetics = gg.aes(x = "FPR", y = "TPR", colour = "parameter")) + \
             gg.geom_line(gg.aes(x = "FPR", y = "TPR", colour = "parameter")) + \
             gg.ggtitle(experiment_type) + gg.xlab("FPR") + gg.ylab("TPR")
-        gg.ggsave(filename = "results/" + experiment_type + self.debug_mode_string + ".png", plot = p)
+        gg.ggsave(filename = "results/" + experiment_type + "_" + self.mode + ".png", plot = p)
         return

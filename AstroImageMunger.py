@@ -198,25 +198,25 @@ class AstroImageMunger:
          doesn't have extracted features and start with that.
         :return:
         """
-        for num_obj in ("1obj", "3obj", "all_obj"):
+        for num_obj in ("1obj", "3obj"):
             dir = os.path.join(self.path_to_data, "cutouts", "features|" + num_obj)
             if not os.path.exists(dir):
                 os.mkdir(dir)
         for i, ZooID in enumerate(self.catalog['ZooID']):
-            files_there = [os.path.exists(self.make_feature_path(i, ZooID, num_obj)) for num_obj in ("all_obj", "1obj", "3obj")]
+            files_there = [os.path.exists(self.make_feature_path(i, ZooID, num_obj)) for num_obj in ("1obj", "3obj")]
             if pick_up_where_left_off and all(files_there):
                 continue
-            for c in range(3):
+            for c in [1]:
+                warnings.warn("Only using channel 1 (second channel) in SExtractor features")
                 sex_image_name = self.make_img_name(i, ZooID, True, c)
-                is_dud = "dud" != self.catalog['object_flavor'][i]
                 # call sextractor
                 try:
                     raw_features = subprocess.check_output([self.path_to_sextractor, sex_image_name],
                                                            cwd=os.path.join(self.path_to_data, "cutouts/fits"))
                 except subprocess.CalledProcessError, e:
                     print "SExtractor stdout output:\n", e.output
-                #make a dataframe for features and put features in it
-                if c==0:
+                #make a dataframe for features for image i and put features in it
+                if c==1:
                     sex_cols = self.extract_header(raw_features)
                     assert self.SEXTRACTOR_FT_OUT == len(sex_cols)
                     feature = pd.DataFrame(columns = sex_cols)
@@ -283,13 +283,13 @@ class AstroImageMunger:
 
         #This block fills in the right type of label
         if binary_label:
-            label = "dud" != self.catalog['object_flavor'][self.counter]
+            label = ("dud" != self.catalog['object_flavor'][self.counter])
         else:
             label = self.catalog['object_flavor'][self.counter]
         ZooID = self.catalog['ZooID'][self.counter]
 
         #This block fills in the right type of feature
-        valid_types = ("image", "sextractor|all_obj", "sextractor|1obj", "sextractor|3obj")
+        valid_types = ("image", "sextractor|1obj", "sextractor|3obj")
         assert datum_type in valid_types
         if datum_type == "image":
             png_path = os.path.join(self.path_to_data, "cutouts/png", str(self.counter) + '_' + ZooID + ".png")
@@ -331,28 +331,26 @@ class AstroImageMunger:
         distance and delta x and delta y from the brightest object for the second and third objects.
         :return:
         """
-        warnings.warn("Only using channel 1 (second channel) in SExtractor features")
-        objects_rband = objects.isin({"color":1})
-        if self.test_mode:
-            assert all([c == 1 for c in objects_rband.color])
-        objects_by_flux = objects_rband.sort_values("FLUX_ISO", ascending=False)
+
+        #sort
+        objects_by_flux = objects.sort_values("FLUX_ISO", ascending=False)
+
+        #pad with zeros
+        num_needed = int(num_obj[0]) - objects_by_flux.shape[0]
+        if num_needed > 0:
+            for n in range(num_needed):
+                objects_by_flux.loc[objects_by_flux.shape[0], :] = np.zeros(self.SEXTRACTOR_FT_OUT)
 
         if num_obj == "1obj":
             return(np.array(objects_by_flux.iloc[0,:]))
 
         assert num_obj == "3obj"
-
-        while True: #wanted a do loop
-            n = objects_by_flux.shape[0]
-            if n >= 3:
-                break
-            objects_by_flux.loc[n, :] = np.zeros(self.SEXTRACTOR_FT_OUT)
-
         brightest_three = objects_by_flux.iloc[0:3,:]
         brightest_three.index = (0,1,2)
         if self.test_mode:
             assert all([brightest_three.loc[0, "FLUX_ISO"] >= flux for flux in objects_by_flux.loc[:, "FLUX_ISO"]])
         features = list(brightest_three.loc[0, :])
+        #Add in xdist, y dist, and total dist
         for rank in (1, 2):
             delta_x = brightest_three.loc[rank, "X_IMAGE"] - brightest_three.loc[0, "X_IMAGE"]
             delta_y = brightest_three.loc[rank, "Y_IMAGE"] - brightest_three.loc[0, "Y_IMAGE"]
