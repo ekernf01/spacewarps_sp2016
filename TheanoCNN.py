@@ -281,9 +281,9 @@ class LeNet():
 
     def fit(self, n_batches):
         start_time = timeit.default_timer()
-        cum_costs = []
-        cum_errs = []
-        cum_penalties = []
+        cum_costs = [0, 0]
+        cum_errs = [0, 0]
+        cum_penalties = [0, 0]
         for i in range(n_batches):
             train_set_x, train_set_y = self.get_training_batch(batch_size = self.batch_size)
             self.train_set_x_T.set_value(train_set_x)
