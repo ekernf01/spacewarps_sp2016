@@ -6,12 +6,20 @@ import pandas as pd
 from AstroImageMunger import *
 import TheanoCNN
 import SimpleTheanoCNN
-
+import os
 
 class LensClassifierExperiment():
 
-    def __init__(self, mode = "full_run"):
+    def __init__(self, folder_name, mode = "full_run"):
+
         self.swmunge = AstroImageMunger()
+
+        self.results_path = "results/" + folder_name + "/"
+        if os.path.exists(self.results_path):
+            warnings.warn("Pick a new results folder name; that one exists already.")
+        assert not os.path.exists(self.results_path)
+        os.mkdir(self.results_path)
+
         self.n_train = int(round(11512 * 9 / 10))
         self.n_test  = int(round(11512 / 10))
         self.mode = mode
@@ -108,9 +116,10 @@ class LensClassifierExperiment():
                                             get_training_batch=self.get_training_batch, batch_size=self.batch_size,
                                             mode=self.mode)
                 (cum_costs, cum_errs, cum_penalties) = model.fit(self.n_distinct_batches * num_passes)
-                net_path = "results/saved_net/" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".pkl"
-                model.save(net_path)
-                fig_path = "results/training_progress/" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".png"
+                net_path = self.results_path + "saved_net/"
+                filename = experiment_type + "=" + str(par) + "_mode=" + self.mode + ".pkl"
+                model.save(net_path, filename)
+                fig_path = self.results_path + "training_progress/" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".png"
                 plt.clf()
                 plt.plot(cum_costs     / range(len(cum_costs)), "b+")
                 plt.plot(cum_errs      / range(len(cum_errs)), "rx")
@@ -143,5 +152,5 @@ class LensClassifierExperiment():
         p = gg.ggplot(data = to_plot, aesthetics = gg.aes(x = "FPR", y = "TPR", colour = "parameter")) + \
             gg.geom_line(gg.aes(x = "FPR", y = "TPR", colour = "parameter")) + \
             gg.ggtitle(experiment_type) + gg.xlab("FPR") + gg.ylab("TPR")
-        gg.ggsave(filename = "results/" + experiment_type + "_" + self.mode + ".png", plot = p)
+        gg.ggsave(filename = self.results_path + experiment_type + "_" + self.mode + ".png", plot = p)
         return
