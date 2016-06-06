@@ -205,7 +205,7 @@ class LeNet():
             # (params[i], grads[i]) pairs.
             self.iter = theano.shared(1)
             self.train_updates = [
-                (param_i, param_i - (self.learning_rate / (1 + self.iter * self.lambduh) * grad_i)
+                (param_i, param_i - (self.learning_rate / (1 + self.iter * self.lambduh) * grad_i))
                 for param_i, grad_i in zip(self.param_arrays, self.grads)
             ]
             batch_template_xy = self.get_training_batch(batch_size = batch_size)
