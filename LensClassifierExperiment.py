@@ -1,6 +1,7 @@
 import sklearn.metrics
 import sklearn.ensemble
 import ggplot as gg
+import matplotlib.pyplot as plt
 import pandas as pd
 from AstroImageMunger import *
 import TheanoCNN
@@ -19,8 +20,8 @@ class LensClassifierExperiment():
         if self.mode == "debug":
             self.n_train = self.n_train / 20
             self.n_test = self.n_test / 20
-            self.batch_size = 20
-            self.n_distinct_batches = 10
+            self.batch_size = 5
+            self.n_distinct_batches = 100
 
         if self.mode == "dry_run":
             self.n_train = self.n_train / 4
@@ -101,10 +102,16 @@ class LensClassifierExperiment():
                 model = TheanoCNN.LeNet(image_size = list(self.swmunge.image_shape), nkerns = nkerns, lambduh = lambduh,
                                         get_training_batch = self.get_training_batch, batch_size=self.batch_size,
                                         mode = self.mode)
-
-                model.fit(self.n_distinct_batches * num_passes)
+                (costs, errs, penalties) = model.fit(self.n_distinct_batches * num_passes)
                 net_path = "results/saved_net_" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".pkl"
                 model.save(net_path)
+                fig_path = "results/training_progress" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".png"
+                plt.clf()
+                plt.plot(costs)
+                plt.plot(errs)
+                plt.plot(penalties)
+                plt.title("training_progress")
+                plt.savefig(fig_path)
                 model = TheanoCNN.LeNet(path = net_path)
                 self.features_test, self.labels_test = self.swmunge.get_batch(self.n_test, CV_type="test")
             elif experiment_type in self.valid_exp_names:

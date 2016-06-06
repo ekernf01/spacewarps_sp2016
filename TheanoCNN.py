@@ -185,8 +185,8 @@ class LeNet():
                               self.layer2.W, self.layer1.W, self.layer0.W,
                               self.layer2.b, self.layer1.b, self.layer0.b]
 
-        print([w.eval().shape for w in self.weight_arrays])
-        print([np.prod(w.eval().shape) for w in self.weight_arrays])
+        #print([w.eval().shape for w in self.weight_arrays])
+        #print([np.prod(w.eval().shape) for w in self.weight_arrays])
 
         #penalized loss function
         self.err = self.layer3.negative_log_likelihood(self.y) / 1000
@@ -281,6 +281,9 @@ class LeNet():
 
     def fit(self, n_batches):
         start_time = timeit.default_timer()
+        costs = []
+        errs = []
+        penalties = []
         for i in range(n_batches):
             train_set_x, train_set_y = self.get_training_batch(batch_size = self.batch_size)
             self.train_set_x_T.set_value(train_set_x)
@@ -292,16 +295,17 @@ class LeNet():
                 print("Training batch ", i, " of ", n_batches, "; batch_size = ", self.batch_size)
                 print("First 5 labels :", train_set_y[0:5], "first pixel:", train_set_x[0, 0, 0, 0])
                 cost, err, penalty = self.train_verbose()
+                costs.append(cost)
+                errs.append(err)
+                penalties.append(penalty)
                 print('Cost, error, penalty on this batch is ', cost, err, penalty)
-                print("Plotting coeffs:")
-                self.plot()
             else:
                 self.train_model()
         end_time = timeit.default_timer()
         print(('The code for file ' +
                os.path.split(__file__)[1] +
                ' ran for %.2fm' % ((end_time - start_time) / 60.)), file=sys.stderr)
-        return
+        return costs, errs, penalties
 
     def predict_proba(self, X):
         """
@@ -351,7 +355,6 @@ class LeNet():
         for i in range(2):
             image_size[i] = self.update_image_size(image_size[i])
             assert image_size[i] <= 96
-        print("image_size:", image_size)
         return layer0, image_size
 
 
