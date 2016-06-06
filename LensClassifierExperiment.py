@@ -93,7 +93,7 @@ class LensClassifierExperiment():
                     lambduh = 10 ** -7
                     num_passes = 4
                 elif experiment_type[6:11] == "npass":
-                    nkerns = [5, 5]
+                    nkerns = [2, 2]
                     lambduh = 10 ** -7
                     num_passes = par
                 else:

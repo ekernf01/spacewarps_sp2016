@@ -99,7 +99,7 @@ class LeNetConvPoolLayer(object):
 
 class LeNet():
     def __init__(self, image_size = None, get_training_batch = None, nkerns=[20, 50],
-                 filter_diam = 12, maxpool_size = 4, lambduh = 0.01,
+                 filter_diam = 12, maxpool_size = 2, lambduh = 0.01,
                  batch_size = 20, path = None, mode = "full"):
         """
         :type  learning_rate: float
@@ -161,7 +161,7 @@ class LeNet():
                                                     nkern = self.nkerns[0], nkern_prev = image_size[2])
         self.layer1, image_size = self.do_conv_pool(self.layer0.output, image_size,
                                                     nkern = self.nkerns[1], nkern_prev = nkerns[0])
-
+        print(image_size)
         # the HiddenLayer being fully-connected, it operates on 2D matrices of
         # shape (batch_size, num_pixels) (i.e matrix of rasterized images).
         self.layer2_input = self.layer1.output.flatten(2)
@@ -185,8 +185,8 @@ class LeNet():
                               self.layer2.W, self.layer1.W, self.layer0.W,
                               self.layer2.b, self.layer1.b, self.layer0.b]
 
-        #print([w.eval().shape for w in self.weight_arrays])
-        #print([np.prod(w.eval().shape) for w in self.weight_arrays])
+        print([w.eval().shape for w in self.weight_arrays])
+        print([np.prod(w.eval().shape) for w in self.weight_arrays])
 
         #penalized loss function
         self.err = self.layer3.negative_log_likelihood(self.y) / 1000
