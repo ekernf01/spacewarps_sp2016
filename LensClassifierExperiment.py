@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from AstroImageMunger import *
 import TheanoCNN
+import SimpleTheanoCNN
 
 
 class LensClassifierExperiment():
@@ -68,7 +69,7 @@ class LensClassifierExperiment():
             return self.static_batch
         return self.swmunge.get_batch(batch_size, CV_type="train")
 
-    def run(self, experiment_type, parvals):
+    def run(self, experiment_type, parvals, simple = False):
         self.init_features(experiment_type)
 
         fprs = []
@@ -98,10 +99,14 @@ class LensClassifierExperiment():
                     num_passes = par
                 else:
                     raise Exception("Oops! Programming error! self.valid_exp_names doesn't match this block of conditionals.")
-
-                model = TheanoCNN.LeNet(image_size = list(self.swmunge.image_shape), nkerns = nkerns, lambduh = lambduh,
-                                        get_training_batch = self.get_training_batch, batch_size=self.batch_size,
-                                        mode = self.mode)
+                if simple:
+                    model = SimpleTheanoCNN.LeNet(image_size = list(self.swmunge.image_shape), nkerns = nkerns, lambduh = lambduh,
+                                            get_training_batch = self.get_training_batch, batch_size=self.batch_size,
+                                            mode = self.mode)
+                else:
+                    model = TheanoCNN.LeNet(image_size=list(self.swmunge.image_shape), nkerns=nkerns, lambduh=lambduh,
+                                            get_training_batch=self.get_training_batch, batch_size=self.batch_size,
+                                            mode=self.mode)
                 (cum_costs, cum_errs, cum_penalties) = model.fit(self.n_distinct_batches * num_passes)
                 net_path = "results/saved_net/" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".pkl"
                 model.save(net_path)
