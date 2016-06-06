@@ -21,7 +21,7 @@ class LensClassifierExperiment():
             self.n_train = self.n_train / 20
             self.n_test = self.n_test / 20
             self.batch_size = 5
-            self.n_distinct_batches = 100
+            self.n_distinct_batches = 1000
 
         if self.mode == "dry_run":
             self.n_train = self.n_train / 4
@@ -85,7 +85,7 @@ class LensClassifierExperiment():
                 model.fit(X=self.features_train, y=self.labels_train)
             elif experiment_type[0:6] == "lenet|":
                 if experiment_type[6:12] == "lambda":
-                    nkerns = [5, 5]
+                    nkerns = [2, 2]
                     lambduh = par
                     num_passes = 4
                 elif experiment_type[6:11] == "nkern":
@@ -110,6 +110,7 @@ class LensClassifierExperiment():
                 plt.plot(costs, "b+")
                 plt.plot(errs, "rx")
                 plt.plot(penalties, "gx")
+                assert all(x < 0.00000001 for x in costs - errs - penalties)
                 plt.legend(labels = ["cost", "error", "penalty"])
                 plt.title("training_progress")
                 plt.savefig(fig_path)

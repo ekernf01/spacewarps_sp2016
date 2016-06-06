@@ -303,7 +303,7 @@ class LeNet():
         print(('The code for file ' +
                os.path.split(__file__)[1] +
                ' ran for %.2fm' % ((end_time - start_time) / 60.)), file=sys.stderr)
-        return costs, errs, penalties
+        return np.array(costs), np.array(errs), np.array(penalties)
 
     def predict_proba(self, X):
         """
