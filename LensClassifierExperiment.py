@@ -21,13 +21,13 @@ class LensClassifierExperiment():
             self.n_train = self.n_train / 20
             self.n_test = self.n_test / 20
             self.batch_size = 5
-            self.n_distinct_batches = 1000
+            self.n_distinct_batches = 100
 
         if self.mode == "dry_run":
             self.n_train = self.n_train / 4
             self.n_test = self.n_test / 4
             self.batch_size = 5
-            self.n_distinct_batches = 100
+            self.n_distinct_batches = 2000
 
         self.static_batch = self.swmunge.get_batch(self.batch_size, CV_type="train")
         self.labels_train = np.zeros(self.n_train)
