@@ -26,8 +26,8 @@ class LensClassifierExperiment():
         if self.mode == "dry_run":
             self.n_train = self.n_train / 4
             self.n_test = self.n_test / 4
-            self.batch_size = 50
-            self.n_distinct_batches = 10
+            self.batch_size = 5
+            self.n_distinct_batches = 100
 
         self.static_batch = self.swmunge.get_batch(self.batch_size, CV_type="train")
         self.labels_train = np.zeros(self.n_train)
@@ -103,12 +103,12 @@ class LensClassifierExperiment():
                                         get_training_batch = self.get_training_batch, batch_size=self.batch_size,
                                         mode = self.mode)
                 (costs, errs, penalties) = model.fit(self.n_distinct_batches * num_passes)
-                net_path = "results/saved_net_" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".pkl"
+                net_path = "results/saved_net/" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".pkl"
                 model.save(net_path)
-                fig_path = "results/training_progress" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".png"
+                fig_path = "results/training_progress/" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".png"
                 plt.clf()
                 plt.plot(costs, "b+")
-                plt.plot(errs, "ro")
+                plt.plot(errs, "rx")
                 plt.plot(penalties, "gx")
                 plt.legend(labels = ["cost", "error", "penalty"])
                 plt.title("training_progress")
