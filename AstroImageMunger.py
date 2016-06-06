@@ -234,12 +234,12 @@ class AstroImageMunger:
 
 
     def increment_counter(self, cycle):
-        self.counter += 1
+        self.counter += np.random.choice(range(50))
         #This block handles running out and/or cycling back
         outta_stuff = self.counter >= self.num_examples_available
         if cycle       and outta_stuff:
             warnings.warn("Returning to beginning of dataset.")
-            self.counter = 0
+            self.counter = self.counter % self.num_examples_available
         if (not cycle) and outta_stuff:
             raise Exception("Ran out of images in nextImage.")
         return
