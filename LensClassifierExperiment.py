@@ -102,15 +102,15 @@ class LensClassifierExperiment():
                 model = TheanoCNN.LeNet(image_size = list(self.swmunge.image_shape), nkerns = nkerns, lambduh = lambduh,
                                         get_training_batch = self.get_training_batch, batch_size=self.batch_size,
                                         mode = self.mode)
-                (costs, errs, penalties) = model.fit(self.n_distinct_batches * num_passes)
+                (cum_costs, cum_errs, cum_penalties) = model.fit(self.n_distinct_batches * num_passes)
                 net_path = "results/saved_net/" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".pkl"
                 model.save(net_path)
                 fig_path = "results/training_progress/" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".png"
                 plt.clf()
-                plt.plot(costs, "b+")
-                plt.plot(errs, "rx")
-                plt.plot(penalties, "gx")
-                assert all(x < 0.00000001 for x in costs - errs - penalties)
+                plt.plot(cum_costs     / range(len(cum_costs)), "b+")
+                plt.plot(cum_errs      / range(len(cum_errs)), "rx")
+                plt.plot(cum_penalties / range(len(cum_penalties)), "gx")
+                assert all(x < 0.00000001 for x in cum_costs - cum_errs - cum_penalties)
                 plt.legend(labels = ["cost", "error", "penalty"])
                 plt.title("training_progress")
                 plt.savefig(fig_path)

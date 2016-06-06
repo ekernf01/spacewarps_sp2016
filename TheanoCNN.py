@@ -281,9 +281,9 @@ class LeNet():
 
     def fit(self, n_batches):
         start_time = timeit.default_timer()
-        costs = []
-        errs = []
-        penalties = []
+        cum_costs = []
+        cum_errs = []
+        cum_penalties = []
         for i in range(n_batches):
             train_set_x, train_set_y = self.get_training_batch(batch_size = self.batch_size)
             self.train_set_x_T.set_value(train_set_x)
@@ -293,9 +293,12 @@ class LeNet():
                 print("Training batch ", i, " of ", n_batches, "; batch_size = ", self.batch_size)
                 print("First 5 labels :", train_set_y[0:5], "first pixel:", train_set_x[0, 0, 0, 0])
                 cost, err, penalty = self.train_verbose()
-                costs.append(cost)
-                errs.append(err)
-                penalties.append(penalty)
+                cum_costs.append(cost)
+                cum_errs.append(err)
+                cum_penalties.append(penalty)
+                cum_costs[-1] += cum_costs[-2]
+                cum_errs[-1] += cum_errs[-2]
+                cum_penalties[-1] += cum_penalties[-2]
                 print('Cost, error, penalty on this batch is ', cost, err, penalty)
             else:
                 self.train_model()
