@@ -110,7 +110,7 @@ class LensClassifierExperiment():
                 plt.plot(cum_costs     / range(len(cum_costs)), "b+")
                 plt.plot(cum_errs      / range(len(cum_errs)), "rx")
                 plt.plot(cum_penalties / range(len(cum_penalties)), "gx")
-                plt.plot(cum_costs[1:] - cum_costs[:0], "ko")
+                plt.plot(cum_costs[1:] - cum_costs[:-1], "ko")
                 assert all(x < 0.00000001 for x in cum_costs - cum_errs - cum_penalties)
                 plt.legend(labels = ["cost", "error", "penalty", "non-cumulative cost"])
                 plt.title("training_progress")
