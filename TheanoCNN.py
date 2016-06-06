@@ -289,9 +289,7 @@ class LeNet():
             self.train_set_x_T.set_value(train_set_x)
             self.train_set_y_T.set_value(train_set_y)
             self.iter.set_value(i + 1)
-            if i % 50 == 0 and not self.mode == "debug":
-                print("Training batch ", i, " of ", n_batches, "; batch_size = ", self.batch_size)
-            if i % 10 == 0 and self.mode=="debug":
+            if i % 10 == 0:
                 print("Training batch ", i, " of ", n_batches, "; batch_size = ", self.batch_size)
                 print("First 5 labels :", train_set_y[0:5], "first pixel:", train_set_x[0, 0, 0, 0])
                 cost, err, penalty = self.train_verbose()

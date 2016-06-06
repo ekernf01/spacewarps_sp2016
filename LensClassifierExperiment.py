@@ -107,9 +107,10 @@ class LensClassifierExperiment():
                 model.save(net_path)
                 fig_path = "results/training_progress" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".png"
                 plt.clf()
-                plt.plot(costs)
-                plt.plot(errs)
-                plt.plot(penalties)
+                plt.plot(costs, "b+")
+                plt.plot(errs, "ro")
+                plt.plot(penalties, "gx")
+                plt.legend(labels = ["cost", "error", "penalty"])
                 plt.title("training_progress")
                 plt.savefig(fig_path)
                 model = TheanoCNN.LeNet(path = net_path)
