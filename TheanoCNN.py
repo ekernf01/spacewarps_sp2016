@@ -296,9 +296,10 @@ class LeNet():
                 cum_costs.append(cost)
                 cum_errs.append(err)
                 cum_penalties.append(penalty)
-                cum_costs[-1] += cum_costs[-2]
-                cum_errs[-1] += cum_errs[-2]
-                cum_penalties[-1] += cum_penalties[-2]
+                if len(cum_costs) >= 2:
+                    cum_costs[-1] += cum_costs[-2]
+                    cum_errs[-1] += cum_errs[-2]
+                    cum_penalties[-1] += cum_penalties[-2]
                 print('Cost, error, penalty on this batch is ', cost, err, penalty)
             else:
                 self.train_model()
