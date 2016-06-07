@@ -112,7 +112,7 @@ class LeNetConvPoolLayer(object):
 class LeNet():
     def __init__(self, image_size = None, get_training_batch = None, nkerns=[1,1],
                  filter_diam = 12, maxpool_size = 4, lambduh = 0.01,
-                 batch_size = 20, path = None, mode = "full"):
+                 batch_size = 20, path = None, mode = "full", learning_rate = 0.1):
         """
         :type  learning_rate: float
         :param learning_rate: initial learning rate (learning rate decays over time )
@@ -157,7 +157,7 @@ class LeNet():
         self.get_training_batch = get_training_batch
         self.lambduh = lambduh
         self.mode = mode
-        self.learning_rate = 0.1
+        self.learning_rate = learning_rate
 
         if path is None:
             assert not any((image_size is None, get_training_batch is None))
