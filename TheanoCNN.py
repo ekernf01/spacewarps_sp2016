@@ -205,7 +205,7 @@ class LeNet():
             # (params[i], grads[i]) pairs.
             self.iter = theano.shared(1)
             self.train_updates = [
-                (param_i, param_i - (self.learning_rate / (1 + self.iter * self.lambduh) * grad_i))
+                (param_i, param_i - (self.learning_rate / (1 + self.iter ) * grad_i))
                 for param_i, grad_i in zip(self.param_arrays, self.grads)
             ]
             batch_template_xy = self.get_training_batch(batch_size = batch_size)
@@ -238,7 +238,7 @@ class LeNet():
 
         return
 
-    def save(self, net_path):
+    def save(self, net_path, filename):
         #reveal = theano.function([input], output)
         print("Saving net. When this is loaded again, it will not be capable of training.")
         dict_to_save = {
@@ -251,7 +251,9 @@ class LeNet():
 
             "param_arrays":[w.eval() for w in self.param_arrays]
         }
-        with open(net_path, "wb") as f:
+        if not os.path.exists(net_path):
+            os.mkdir(net_path)
+        with open(os.path.join(net_path, filename), "wb") as f:
             pkl.dump(file = f, obj = dict_to_save)
         return
 

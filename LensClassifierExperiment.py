@@ -47,7 +47,7 @@ class LensClassifierExperiment():
                                 'lenet|npass',
                                 'trees|1obj|max_depth', 'trees|1obj|num_trees',
                                 'trees|3obj|max_depth', 'trees|3obj|num_trees']
-        self.suggested_parvals = [[10 ** -5, 10 ** -3, 10 ** -1, 1],
+        self.suggested_parvals = [[10 ** -5, 10 ** -3, 10 ** -1, 1, 10, 100],
                                   [10 ** -13, 10 ** -11, 10 ** -9, 10 ** -7, 10 ** -5, 10 ** -3],
                                   [1, 5, 10],
                                   [1, 4, 10],
