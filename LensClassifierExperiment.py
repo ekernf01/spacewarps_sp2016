@@ -30,7 +30,7 @@ class LensClassifierExperiment():
             self.n_train = self.n_train / 20
             self.n_test = self.n_test / 20
             self.batch_size = 5
-            self.n_distinct_batches = 100
+            self.n_distinct_batches = 10
 
         if self.mode == "dry_run":
             self.n_train = self.n_train / 4
@@ -117,19 +117,25 @@ class LensClassifierExperiment():
                                             mode=self.mode)
                 (cum_costs, cum_errs, cum_penalties) = model.fit(self.n_distinct_batches * num_passes)
                 net_path = self.results_path + "saved_net/"
-                filename = experiment_type + "=" + str(par) + "_mode=" + self.mode + ".pkl"
-                model.save(net_path, filename)
-                fig_path = self.results_path + "training_progress/" + experiment_type + "=" + str(par) + "_mode=" + self.mode + ".png"
+                net_filename = experiment_type + "=" + str(par) + "_mode=" + self.mode + ".pkl"
+                model.save(net_path, net_filename)
+
                 plt.clf()
                 plt.plot(cum_costs     / range(len(cum_costs)), "b+")
                 plt.plot(cum_errs      / range(len(cum_errs)), "rx")
                 plt.plot(cum_penalties / range(len(cum_penalties)), "gx")
                 plt.plot(cum_costs[1:] - cum_costs[:-1], "ko")
-                assert all(x < 0.00000001 for x in cum_costs - cum_errs - cum_penalties)
                 plt.legend(labels = ["cost", "error", "penalty", "non-cumulative cost"])
                 plt.title("training_progress")
-                plt.savefig(fig_path)
-                model = TheanoCNN.LeNet(path = net_path)
+                fig_path = self.results_path + "training_progress/"
+                fig_filename = experiment_type + "=" + str(par) + "_mode=" + self.mode + ".png"
+                if not os.path.exists(fig_path):
+                    os.mkdir(fig_path)
+                plt.savefig(fig_path + fig_filename)
+                if simple:
+                    model = SimpleTheanoCNN.LeNet(path = net_path + net_filename)
+                else:
+                    model = TheanoCNN.LeNet(path = net_path + net_filename)
                 self.features_test, self.labels_test = self.swmunge.get_batch(self.n_test, CV_type="test")
             elif experiment_type in self.valid_exp_names:
                 raise Exception("Oops! Programming error! self.valid_exp_names doesn't match this block of conditionals.")
